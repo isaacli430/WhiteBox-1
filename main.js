@@ -1,6 +1,6 @@
 /* Made By Joshua Bird
  *
- * Whitebox
+ * Whitebox test
 */
 
 var socket = io.connect('https://www.jblrd.com', {path: "/V2.0.3/whitebox-websocket/socket.io"});
