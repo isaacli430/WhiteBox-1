@@ -1,0 +1,782 @@
+<!doctype html>
+<html>
+	<head>
+		<title>WhiteBox</title>
+		<link rel="stylesheet/less" href="main.less">
+		<link rel="stylesheet" href="vendors/bootstrap.min.css">
+		<link rel="stylesheet" href="vendors/all.min.css">
+		<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+	</head>
+	<body>
+		<div class="container">
+
+			<div>
+				<a class="title">WhiteBox</a>
+			</div>
+
+			<div id="mainTabs">
+				<ul class="nav nav-tabs" id="mainTabBtns" role="tablist">
+					<li class="nav-item">
+						<a class="nav-link active py-1" id="friends-tab" data-toggle="tab" href="#friends" role="tab">
+							<span class="far fa-comment-alt"></span>
+						</a>
+					</li>
+					<li class="nav-item dropdown">
+						<a class="nav-link dropdown-toggle py-1" id="add-dropdown" data-toggle="dropdown" href="#add" role="button">
+							<span class="far fa-plus-square"></span></a>
+						<div class="dropdown-menu">
+							<a class="dropdown-item dropdown-text" id="add-friends-tab" data-toggle="tab" href="#add-friends" role="tab">Add Friends</a>
+							<a class="dropdown-item dropdown-text" id="make-group-tab" data-toggle="tab" href="#make-group" role="tab">Make Group</a>
+						</div>
+					</li>
+					<li class="nav-item dropdown">
+						<a class="nav-link dropdown-toggle py-1" id="games-dropdown" data-toggle="dropdown" href="#games" role="button">
+							<span class="fas fa-gamepad"></span></a>
+						<div class="dropdown-menu">
+							<a class="dropdown-item dropdown-text" id="snake-tab" data-toggle="tab" href="#snake" role="tab">Snake</a>
+							<a class="dropdown-item dropdown-text" id="2048-game-tab" data-toggle="tab" href="#2048-game" role="tab">2048</a>
+							<a class="dropdown-item dropdown-text" id="tetris-tab" data-toggle="tab" href="#tetris" role="tab">Tetris</a>
+						</div>
+					</li>
+					<li class="nav-item dropdown">
+						<a class="nav-link dropdown-toggle py-1" id="friend-requests-dropdown" data-toggle="dropdown" href="#" role="button">
+							<span class="fas fa-ellipsis-h"></span>
+						</a>
+						<div class="dropdown-menu">
+							<a class="dropdown-item dropdown-text" id="friend-requests-tab" data-toggle="tab" href="#friend-requests" role="tab">Friend Requests</a>
+							<a class="dropdown-item dropdown-text" id="sent-friend-requests-tab" data-toggle="tab" href="#sent-friend-requests" role="tab">Sent Friend Requests</a>
+							<a class="dropdown-item dropdown-text" id="settings-tab" data-toggle="tab" href="#settings" role="tab">Settings</a>
+							<a class="dropdown-item dropdown-text" data-toggle="tab" href="#about" role="tab">About</a>
+						</div>
+					</li>
+				</ul>
+				<div class="tab-content" id="mainTabContent">
+					<div class="tab-pane fade show active" id="friends" role="tabpanel">
+						<div class="row">
+							<div style="overflow-y: scroll; height:300px;" class="col-12">
+								<table class="table table-sm outputTable">
+									<thead>
+										<tr>
+											<th>
+												<input type="text" class="form-control form-control-sm table-search" placeholder="Chats" style="border-width: 0;">
+											</th>
+											<th class="text" width="80"></th>
+										</tr>
+									</thead>
+									<tbody id="users">
+									</tbody>
+								</table>
+							</div>
+						</div>
+					</div>
+
+					<div class="tab-pane fade" id="add-friends" role="tabpanel">
+						<div class="row">
+							<div style="overflow-y: scroll; height:300px;" class="col-12">
+								<table class="table table-sm outputTable">
+									<thead>
+										<tr>
+											<th>
+												<div class="row">
+													<div class="col-8">
+													<input type="text" class="form-control form-control-sm" autocomplete="off" id="userSearchInput" placeholder="Username">
+													</div>
+													<div class="col-4">
+														<a class="btn btn-outline-dark btn-sm" id="userSearchBtn">Search</a>
+													</div>
+												</div>
+											</th>
+											<th class="text" style="text-align: right; font-size: 12px;">Last Online</th>
+										</tr>
+									</thead>
+									<tbody id="matchingUsers">
+									</tbody>
+								</table>
+							</div>
+						</div>
+					</div>
+
+					<div class="tab-pane fade" id="make-group" role="tabpanel">
+						<div class="row">
+							<div style="overflow-y: scroll; height:300px;" class="col-12">
+								<table class="table table-sm outputTable">
+									<thead>
+										<tr>
+											<th>
+												<div class="row">
+													<div class="col-9">
+														<input type="text" class="form-control form-control-sm table-search" placeholder="Search">
+													</div>
+													<div class="col-3">
+															<button class="btn btn-outline-dark btn-sm btn-block" id="makeGroupNextBtn" disabled>Next</button>
+													</div>
+												</div>
+											</th>
+										</tr>
+									</thead>
+									<tbody id="makeGroupTable">
+									</tbody>
+								</table>
+							</div>
+						</div>
+					</div>
+
+					<div class="tab-pane fade" id="snake" role="tabpanel">
+						<div class="row pt-4">
+							<div class="col-12" style="text-align:center;">
+								<canvas id="snakeCanvas" width="350" height="280"></canvas>
+							</div>
+						</div>
+					</div>
+
+					<div class="tab-pane fade" id="2048-game" role="tabpanel">
+						<div class="row pt-2">
+							<div class="col-12" style="text-align:center;">
+								<canvas id="2048Canvas" width="350" height="370"></canvas>
+							</div>
+						</div>
+					</div>
+
+					<div class="tab-pane fade" id="tetris" role="tabpanel">
+						<div class="row pt-2">
+							<div class="col-12" style="text-align:center;">
+								<canvas id="tetrisCanvas" width='350' height='500'></canvas>
+							</div>
+						</div>
+					</div>
+
+					<div class="tab-pane fade" id="friend-requests" role="tabpanel">
+						<div class="row">
+							<div style="overflow-y: scroll; height:300px;" class="col-12">
+								<table class="table table-sm outputTable">
+									<thead>
+										<tr>
+											<th class="text">Friend Requests</th>
+											<th class="text" style="text-align: right; font-size: 12px;">Time Since Request</th>
+										</tr>
+									</thead>
+									<tbody id="friendRequests">
+									</tbody>
+								</table>
+							</div>
+						</div>
+					</div>
+
+					<div class="tab-pane fade" id="sent-friend-requests" role="tabpanel">
+						<div class="row">
+							<div style="overflow-y: scroll; height:300px;" class="col-12">
+								<table class="table table-sm outputTable">
+									<thead>
+										<tr>
+											<th class="text">Sent Friend Requests</th>
+											<th class="text" style="text-align: right; font-size: 12px;">Time Since Request</th>
+										</tr>
+									</thead>
+									<tbody id="sentFriendRequests">
+									</tbody>
+								</table>
+							</div>
+						</div>
+					</div>
+
+					<div class="tab-pane fade" id="settings" role="tabpanel">
+						<div class="row">
+							<div class="col-12">
+								<h6 class="text">Settings</h6>
+							</div>
+						</div>
+						<div class="row">
+							<div class="col-4 pr-0">
+								<button class="btn btn-sm btn-outline-dark btn-block" id="lightThemeBtn">Light</button>
+							</div>
+							<div class="col-4 pl-0 pr-0">
+								<button class="btn btn-sm btn-outline-dark btn-block" id="darkThemeBtn">Dark</button>
+							</div>
+							<div class="col-4 pl-0">
+								<div class="dropdown">
+									<button class="btn btn-sm btn-outline-dark btn-block dropdown-toggle" type="button" data-toggle="dropdown">
+										Custom
+									</button>
+									<div class="dropdown-menu" id="customThemeDropdown">
+										<a class="dropdown-item dropdown-text" id="customThemeBtn">+ New Theme</a>
+									</div>
+								</div>
+							</div>
+						</div>
+						<div class="row">
+							<div class="col-12">
+								<button class="btn btn-sm btn-outline-dark btn-block" id="toggleBackgroundButton">Toggle Transparent Background</button>
+							</div>
+						</div>
+						<div class="row">
+							<div class="col-5">
+								<input type="range" min="0" max="600" value="300" id="xBackground">
+								<br>
+								<input type="range" min="0" max="600" value="300" id="yBackground">
+							</div>
+							<div class="col-7">
+								<a class="btn btn-sm btn-outline-dark btn-block" id="setBackgroundOffsetsButton">Save Background Offsets</a>
+							</div>
+						</div>
+						<div class="row">
+							<div class="col-12">
+								<a class="btn btn-sm btn-outline-dark btn-block" id="changeUsernameButton">Change Username</a>
+							</div>
+						</div>
+						<div class="row">
+							<div class="col-12">
+								<a class="btn btn-sm btn-outline-dark btn-block" id="logoutButton">Logout</a>
+							</div>
+						</div>
+						<div class="row">
+							<div class="col-12">
+								<a class="btn btn-sm btn-outline-dark btn-block" id="deleteAccountButton">Delete Account</a>
+							</div>
+						</div>
+					</div>
+
+					<div class="tab-pane fade" id="about" role="tabpanel">
+						<div class="row">
+							<div class="col-12">
+								<h6 class="text">About</h6>
+							</div>
+						</div>
+						<div class="row">
+							<div class="col-12">
+								<small class="text" id="aboutPageContents">
+								Created by Joshua Bird 
+								</small>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<div class="container" id="userInput">
+				<ul class="nav nav-tabs" id="mainTabBtns" role="tablist">
+					<li class="nav-item">
+						<a class="nav-link active py-1" id="login-tab" data-toggle="tab" href="#login" role="tab">
+							Login
+						</a>
+					</li>
+					<li class="nav-item">
+						<a class="nav-link py-1" id="create-account-tab" data-toggle="tab" href="#create-account" role="tab">
+							Create Account
+						</a>
+					</li>
+				</ul>
+				<div class="tab-content pt-3">
+					<div class="tab-pane fade show active" id="login" role="tabpanel">
+						<form id="login-form">
+							<div class="form-group">
+								<div class="row">
+									<div class="col-8">
+										<input type="text" class="form-control form-control-sm" id="loginUsername" placeholder="Username">
+									</div>
+								</div>
+								<div class="row pt-2">
+									<div class="col-8">
+										<input type="password" class="form-control form-control-sm" id="loginPassword" placeholder="Password">
+									</div>
+									<div class="col-4">
+										<button type="submit" class="btn btn-outline-dark btn-sm">Submit</button>
+									</div>
+								</div>
+							</div>
+						</form>
+					</div>
+					<div class="tab-pane fade" id="create-account" role="tabpanel">
+						<form id="create-account-form">
+							<div class="form-group">
+								<div class="row">
+									<div class="col-8">
+										<input type="text" class="form-control form-control-sm" id="create-account-username" placeholder="Username">
+									</div>
+								</div>
+								<div class="row pt-2">
+									<div class="col-8">
+										<input type="email" class="form-control form-control-sm" id="create-account-email" placeholder="Email">
+									</div>
+								</div>
+								<div class="row pt-2">
+									<div class="col-8">
+										<input type="password" class="form-control form-control-sm" id="create-account-password" placeholder="Password">
+									</div>
+								</div>
+								<div class="row pt-2">
+									<div class="col-8">
+										<input type="password" class="form-control form-control-sm" id="create-account-confirm-password" placeholder="Confirm Password">
+									</div>
+									<div class="col-4">
+										<button type="submit" class="btn btn-outline-dark btn-sm">Submit</button>
+									</div>
+								</div>
+							</div>
+						</form>
+					</div>
+				</div>
+			</div>
+
+			<div class="container" id="messagePage">
+				<div class="row">
+					<div class="col-11">
+						<h6 class="text mb-0" id="messagePageName" style="font-weight: 200; font-size: 16px;"></h6>
+					</div>
+					<div class="col-1">
+						<i class="fas fa-bars text float-right icon-btn" id="messagePageSettingsBtn"></i>
+					</div>
+				</div>
+				<div class="row">
+					<div class="col-12">
+						<h6 class="text" style="font-weight: 200; font-size: 11px;" id="messagePageLastOnline"></h6>
+					</div>
+				</div>
+				<div id="messageScroll">
+				</div>
+				<div class="row messageRow">
+					<div class="col-9">
+						<textarea class="form-control form-control-sm" rows="3" id="message" placeholder="Message"></textarea>
+					</div>
+					<div class="col-3">
+						<a class="btn btn-outline-dark btn-sm" id="sendButton">Send</a>
+					</div>
+				</div>
+			</div>
+
+			<div class="row">
+				<button class="textLink footerButton " id="backButton">Back</button>
+				<br>
+			</div>
+		</div>
+
+		<div class="modal fade" id="confirmUnfriendModal">
+			<div class="modal-dialog">
+				<div class="modal-content">
+					<div class="modal-body text" id="confirmUnfriendMsg">
+					</div>
+					<div class="modal-footer">
+							<div class="col-6">
+								<button type="button" class="btn btn-outline-dark btn-block" data-dismiss="modal">No</button>
+							</div>
+							<div class="col-6">
+								<button type="button" class="btn btn-outline-dark btn-block" id="unfriendFriendBtn">Yes</button>
+							</div>
+						</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="modal fade" id="confirmDeleteAccModal">
+			<div class="modal-dialog">
+				<div class="modal-content">
+					<div class="modal-body text">
+						Are you sure you want to delete your account? (you will lose all your friends and messages)
+					</div>
+					<div class="modal-footer">
+							<div class="col-6">
+								<button type="button" class="btn btn-outline-dark btn-block" data-dismiss="modal">No</button>
+							</div>
+							<div class="col-6">
+								<button type="button" class="btn btn-outline-dark btn-block" id="confirmDeleteAccBtn">Yes</button>
+							</div>
+						</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="modal fade" id="confirmChangeUsernameModal">
+			<div class="modal-dialog">
+				<div class="modal-content">
+					<div class="modal-body text">
+						<input type="text" class="form-control form-control-sm" autocomplete="off" id="changeUsernameInput" placeholder="New Username">
+					</div>
+					<div class="modal-footer">
+							<div class="col-6">
+								<button type="button" class="btn btn-outline-dark btn-block" data-dismiss="modal">Cancel</button>
+							</div>
+							<div class="col-6">
+								<button type="button" class="btn btn-outline-dark btn-block" id="confirmChangeUsernameBtn">Save</button>
+							</div>
+						</div>
+				</div>
+			</div>
+		</div>
+
+
+		<!-- FRIENDS SETTINGS -->
+
+		<div class="modal fade" id="friendSettingsModal">
+			<div class="modal-dialog modal-dialog-slideout">
+				<div class="modal-content">
+					<div class="modal-body">
+
+						<div class="row">
+							<div class="col-8">
+								Delete Chats: 
+							</div>
+							<div class="col-4">
+								<select class="form-control form-control-sm" id="deleteMsgSelectFriend">
+									<option value="1">Read</option>
+									<option value="2">1 Day</option>
+									<option value="3">1 Week</option>
+									<option value="4">Never</option>
+								</select>
+							</div>
+						</div>
+
+						<div class="row pt-3">
+							<div class="col-12">
+								<button type="button" id="promptUnfriendFriendBtn" class="btn btn-outline-dark btn-block btn-sm">Unfriend</button>
+							</div>
+						</div>
+
+					</div>
+					<div class="modal-footer">
+						<div class="col-6 offset-6">
+							<button type="button" class="btn btn-outline-dark btn-block" data-dismiss="modal">Close</button>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+
+		<!-- GROUP SETTINGS -->
+
+		<div class="modal fade" id="groupSettingsModal">
+			<div class="modal-dialog modal-dialog-slideout">
+				<div class="modal-content">
+					<div class="modal-body">
+
+						<div class="row">
+							<div class="col-8">
+								Delete Sent Messages After: 
+							</div>
+							<div class="col-4">
+								<select class="form-control form-control-sm" id="deleteMsgSelectGroup">
+									<option value="1">1 Day</option>
+									<option value="2">1 Week</option>
+									<option value="3">Never</option>
+								</select>
+							</div>
+						</div>
+						
+						<div class="row pt-3">
+							<div class="col-12">
+								<button type="button" id="addFriendToGroupBtn" class="btn btn-outline-dark btn-block btn-sm">Add Friend To Group</button>
+							</div>
+						</div>
+						
+						<div class="row pt-3">
+							<div class="col-12">
+								<button type="button" id="seeGroupMembersBtn" class="btn btn-outline-dark btn-block btn-sm">See Group Members</button>
+							</div>
+						</div>
+
+						<div class="row pt-3">
+							<div class="col-12">
+								<button type="button" id="leaveGroupBtn" class="btn btn-outline-dark btn-block btn-sm">Leave Group</button>
+							</div>
+						</div>
+
+					</div>
+					<div class="modal-footer">
+						<div class="col-6 offset-6">
+							<button type="button" class="btn btn-outline-dark btn-block" data-dismiss="modal">Close</button>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="modal fade" id="addFriendToGroupModal">
+			<div class="modal-dialog">
+				<div class="modal-content">
+					<div class="modal-body">
+						<div class="row">
+							<div style="overflow-y: scroll; height:300px;" class="col-12">
+								<table class="table table-sm outputTable">
+									<thead>
+										<tr>
+											<th>
+												<div class="row">
+													<div class="col-9">
+														<input type="text" class="form-control form-control-sm table-search" placeholder="Search">
+													</div>
+												</div>
+											</th>
+										</tr>
+									</thead>
+									<tbody id="addFriendToGroupTable">
+									</tbody>
+								</table>
+							</div>
+						</div>
+					</div>
+					<div class="modal-footer">
+						<button type="button" class="btn btn-outline-dark" data-dismiss="modal">Close</button>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="modal fade" id="seeGroupMembersModal">
+			<div class="modal-dialog">
+				<div class="modal-content">
+					<div class="modal-body">
+						<div class="row">
+							<div style="overflow-y: scroll; height:300px;" class="col-12">
+								<table class="table table-sm outputTable">
+									<thead>
+										<tr>
+											<th>
+												<input type="text" class="form-control form-control-sm table-search" placeholder="Search">
+											</th>
+											<th class="text" style="text-align: right;"></th>
+										</tr>
+									</thead>
+									<tbody id="seeGroupMembersTable">
+									</tbody>
+								</table>
+							</div>
+						</div>
+					</div>
+					<div class="modal-footer">
+						<button type="button" class="btn btn-outline-dark" data-dismiss="modal">Close</button>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="modal fade" id="makeGroupModal">
+			<div class="modal-dialog">
+				<div class="modal-content">
+					<div class="modal-body">
+						<input type="text" class="form-control form-control-sm" id="makeGroupName" placeholder="Group Name">
+					</div>
+					<div class="modal-footer">
+						<div class="col-6">
+							<button type="button" class="btn btn-outline-dark btn-block" data-dismiss="modal">Cancel</button>
+						</div>
+						<div class="col-6">
+							<button type="button" id="makeGroupCreateBtn" class="btn btn-outline-dark btn-block">Create</button>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+
+		<!-- ALERT MODAL -->
+
+		<div class="modal fade" id="alertModal">
+			<div class="modal-dialog">
+				<div class="modal-content">
+					<div class="modal-body" id="alertMsg">
+					</div>
+					<div class="modal-footer">
+						<button type="button" class="btn btn-outline-dark" data-dismiss="modal">Close</button>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="modal fade" id="customThemeModal">
+			<div class="modal-dialog">
+				<div class="modal-content">
+					<div class="modal-body">
+
+						<div class="row">
+							<div class="col-12">
+								<h6 style="font-size: 14px;">Use a color picker such as https://htmlcolorcodes.com/color-picker to get the hex codes for the colors you want, and enter them in the input boxes.</h6>
+							</div>
+						</div>
+
+						<div class="row">
+							<div class="col-12 p-1">
+								<input type="text" class="form-control form-control-sm" autocomplete="off" id="testThemeName" placeholder="Custom Theme Name">
+							</div>
+						</div>
+
+						<div class="row">
+							<div class="col-4 p-1">
+								<small class="message-header">Background</small>
+								<input value="#FFFFFF" type="text" class="form-control form-control-sm" autocomplete="off" id="testTheme1" placeholder="Background">
+							</div>
+							<div class="col-4 p-1">
+								<small class="message-header">Main Text</small>
+								<input value="#000000" type="text" class="form-control form-control-sm" autocomplete="off" id="testTheme2" placeholder="Main Text">
+							</div>
+							<div class="col-4 p-1">
+								<small class="message-header">2nd Text</small>
+								<input value="#495057" type="text" class="form-control form-control-sm" autocomplete="off" id="testTheme3" placeholder="2nd Text">
+							</div>
+						</div>
+
+						<div class="row">
+							<div class="col-4 p-1">
+								<small class="message-header">Borders</small>
+								<input value="#CED4DA" type="text" class="form-control form-control-sm" autocomplete="off" id="testTheme4" placeholder="Border">
+							</div>
+							<div class="col-4 p-1">
+								<small class="message-header">Highlighted</small>
+								<input value="#CED4DA" type="text" class="form-control form-control-sm" autocomplete="off" id="testTheme5" placeholder="Bkground">
+							</div>
+							<div class="col-4 p-1">
+								<small class="message-header">Link</small>
+								<input value="#3B97E0" type="text" class="form-control form-control-sm" autocomplete="off" id="testTheme6" placeholder="Links">
+							</div>
+						</div>
+
+						<div class="row p-1">
+							<div class="col-4 offset-8">
+								<button type="button" class="btn btn-sm btn-outline-dark btn-block" id="testThemeUpdateBtn">Update</button>
+							</div>
+						</div>
+
+						<div class="row pt-5">
+							<div class="col-12">
+								<ul class="nav nav-tabs">
+									<li class="nav-item">
+										<a class="nav-link active">Active Tab</a>
+									</li>
+									<li class="nav-item">
+										<a class="nav-link">Another Tab</a>
+									</li>
+								</ul>
+							</div>
+						</div>
+
+						<div class="row pt-3">
+							<div class="col-8">
+								<input type="text" class="form-control form-control-sm" placeholder="2nd Text">
+							</div>
+							<div class="col-4">
+								<a class="btn btn-outline-dark btn-sm btn-block">Main Text</a>
+							</div>
+						</div>
+
+						<div class="row">
+							<div class="col-12">
+								<div class="sendCard">
+									<h6 class="message-header">7:59 pm 2nd Text</h6>
+									<h6 class="message">Main Text</h6>
+								</div>
+								<div class="sendCard">
+									<h6 class="message"><a href="#">Link</a></h6>
+								</div>
+							</div>
+						</div>
+
+					</div>
+					<div class="modal-footer">
+						<div class="col-6">
+							<button type="button" class="btn btn-outline-dark btn-block" data-dismiss="modal" id="cancelTestThemeBtn">Cancel</button>
+						</div>
+						<div class="col-6">
+							<button type="button" id="saveTestThemeBtn" class="btn btn-outline-dark btn-block">Save</button>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="modal fade" id="friendsFriendsModal">
+			<div class="modal-dialog">
+				<div class="modal-content">
+					<div class="modal-body">
+						<div style="overflow-y: scroll; height:250px;">
+							<table class="table table-sm outputTable">
+								<thead>
+									<tr>
+										<td>
+											Username
+										</td>
+									</tr>
+								</thead>
+								<tbody id="friendsFriendsTable">
+								</tbody>
+							</table>
+						</div>
+					</div>
+					<div class="modal-footer">
+						<button type="button" class="btn btn-outline-dark" data-dismiss="modal">Close</button>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="modal fade" id="gameHighscoresModal">
+			<div class="modal-dialog">
+				<div class="modal-content">
+					<div class="modal-body">
+						<div style="overflow-y: scroll; height:250px;">
+							<table class="table table-sm outputTable">
+								<thead>
+									<tr>
+										<th class="text">Username</th>
+										<th class="text" style="text-align: right;">Score</th>
+									</tr>
+								</thead>
+								<tbody id="gameHighscoresTable">
+								</tbody>
+							</table>
+						</div>
+					</div>
+					<div class="modal-footer">
+						<button type="button" class="btn btn-outline-dark" data-dismiss="modal">Close</button>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="modal fade" id="enableNotificationsModal">
+			<div class="modal-dialog">
+				<div class="modal-content">
+					<div class="modal-body">
+						<div class="row">
+							<div class="col-12">
+								Click the button below and click "allow" to enable notificiations. The notifications are just small numbers next to the extension icon.
+							</div>
+						</div>
+						<div class="row">
+							<div class="col-12">
+								<button type="button" class="btn btn-outline-dark btn-block" id="enableNotificationsBtn">Enable Notifications</button>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="modal fade" id="customThemePromptModal">
+			<div class="modal-dialog">
+				<div class="modal-content">
+					<div class="modal-body">
+						<div class="row">
+							<div class="col-6">
+								<button type="button" class="btn btn-outline-dark btn-block" id="editCustomThemeBtn">Edit Theme</button>
+							</div>
+							<div class="col-6">
+								<button type="button" class="btn btn-outline-dark btn-block" id="setCustomThemeBtn">Set Theme</button>
+							</div>
+						</div>
+					</div>
+					<div class="modal-footer">
+						<button type="button" class="btn btn-outline-dark" data-dismiss="modal">Cancel</button>
+					</div>
+				</div>
+			</div>
+		</div>
+
+	</body>
+	<script type="text/javascript" src="vendors/less.min.js"></script>
+	<script type="text/javascript" src="vendors/jquery-3.3.1.js"></script>
+	<script type="text/javascript" src="vendors/popper.min.js"></script>
+	<script type="text/javascript" src="vendors/bootstrap.min.js"></script>
+	<script type="text/javascript" src="vendors/socket.io.js"></script>
+	<script type="text/javascript" src="games/snake.js"></script>
+	<script type="text/javascript" src="games/2048.js"></script>
+	<script type="text/javascript" src="games/tetris.js"></script>
+	<script type="text/javascript" src="main.js"></script>
+</html>
