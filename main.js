@@ -6,9 +6,9 @@
 var socket = io.connect('https://www.jblrd.com', {path: "/V2.0.3/whitebox-websocket/socket.io"});
 //var socket = io.connect('https://www.jblrd.com', {path: "/V2/whitebox-websocket-development/socket.io"});
 
-//socket.on("connected", function() {
+socket.on("connected", function() {
     login();
-//});
+});
 
 $("#backButton").on("click", goBack);
 $("#sendButton").on("click", sendMessage);
