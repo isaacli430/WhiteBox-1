@@ -356,6 +356,20 @@ function render() {
     }
 
     ctx.strokeStyle = theme1;
+    yValid=0;
+    while( valid(0, yValid) ) {
+        ++yValid;
+    }
+    for (var y = 0; y < 4; ++y ) {
+        for ( var x = 0; x < 4; ++x ) {
+            if ( current[ y ][ x ] ) {
+                ctx.fillStyle = shadeColor(theme2, 0.7);
+                drawBlock(currentX + x, currentY + y + yValid - 1);
+            }
+        }
+    }
+
+    ctx.strokeStyle = theme1;
     ctx.lineWidth=2;
     for ( var y = 0; y < 4; ++y ) {
         for ( var x = 0; x < 4; ++x ) {
@@ -365,6 +379,7 @@ function render() {
             }
         }
     }
+
     ctx.fillStyle = theme2;
     ctx.font="Bold 15px Verdana";
     ctx.textAlign = "right";
