@@ -943,6 +943,11 @@ function sendMessage(){
 
     var reply = [username, randomKey, message, clickedChat.id, userId, clickedChat.name, clickedChat.type];
 
+    // add to messages
+    messages.push({messageId: null, senderId: userId, message: message, timeSent: unixTime, confirmed: false});
+    refreshMessagePage();
+    messageScroll.scrollTop = messageScroll.scrollHeight; // Scroll to bottom
+
     // Send message to server
     socket.emit("message", reply);
 }
@@ -1100,12 +1105,14 @@ socket.on("messageConfirm", function(reply) {
     var lastMessageSenderId;
     var lastTimeStamp = 0;
 
-    // add to messages
-    messages.push({messageId: reply.messageId, senderId: userId, message: message, timeSent: timeSent}); // add to messages
+    for (var i = 0; i < messages.length; i++) {
+        if(messages[i].confirmed != undefined && !messages[i].confirmed && message === messages[i].message){
+            messages[i].confirmed = true;
+            break;
+        }
+    }
 
     refreshMessagePage();
-
-    messageScroll.scrollTop = messageScroll.scrollHeight; // Scroll to bottom
 });
 
 socket.on("refreshedUsers", function(reply) {
@@ -1118,13 +1125,18 @@ socket.on("refreshedUsers", function(reply) {
 
 function refreshMessagePage() {
     var messageScroll = document.getElementById("messageScroll");
-    $("#messageScroll").contents().remove();
+    messageScroll.innerHTML = "";
 
     for(var i=0; i<messages.length; i++){
         var message = findLinks(messages[i].message);
         var timeSent = messages[i].timeSent;
         var senderId = messages[i].senderId;
         var messageId = messages[i].messageId;
+        var confirmed = messages[i].confirmed; // If it is confirmed by server
+
+        if(confirmed === undefined){
+            confirmed = true;
+        }
 
         var lastMessageSenderId;
         var lastTimeStamp = 0;
@@ -1197,6 +1209,11 @@ function refreshMessagePage() {
         var messageText = document.createElement("h6");
         messageText.classList.add("message");
         messageText.innerHTML = message;
+
+        // If not received by server 
+        if(!confirmed){
+            messageText.classList.add("unconfirmed");
+        }
 
         messageDiv.appendChild(messageText);
         messageDiv.setAttribute("data-messageId", messageId);
