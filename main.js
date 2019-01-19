@@ -941,6 +941,8 @@ function sendMessage(){
 
     if(message === "") return;
 
+    message = unescape(encodeURIComponent(message));
+
     var reply = [username, randomKey, message, clickedChat.id, userId, clickedChat.name, clickedChat.type];
 
     // add to messages
@@ -1128,7 +1130,7 @@ function refreshMessagePage() {
     messageScroll.innerHTML = "";
 
     for(var i=0; i<messages.length; i++){
-        var message = findLinks(messages[i].message);
+        var message = findLinks(decodeURIComponent(escape(messages[i].message)));
         var timeSent = messages[i].timeSent;
         var senderId = messages[i].senderId;
         var messageId = messages[i].messageId;
@@ -1208,7 +1210,7 @@ function refreshMessagePage() {
 
         var messageText = document.createElement("h6");
         messageText.classList.add("message");
-        messageText.innerHTML = message;
+        messageText.innerHTML = escapeHtml(message);
 
         // If not received by server 
         if(!confirmed){
@@ -1866,3 +1868,11 @@ $("#make-group-tab").on('show.bs.tab', function(){
     });
 });
 
+function escapeHtml(unsafe) {
+    return unsafe
+         .replace(/&/g, "&amp;")
+         .replace(/</g, "&lt;")
+         .replace(/>/g, "&gt;")
+         .replace(/"/g, "&quot;")
+         .replace(/'/g, "&#039;");
+ }
