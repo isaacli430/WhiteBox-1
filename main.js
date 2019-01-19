@@ -36,6 +36,9 @@ $("#unfriendFriendBtn").on("click", unfriendFriend);
 // Search users
 $("#userSearchBtn").on("click", searchUsers);
 
+// Scroll down btn
+$("#scrollDownBtn").on("click", scrollDown);
+
 $("#unfriendFriendBtn").on("click", unfriendFriend);
 $("#lightThemeBtn").on("click", setLightTheme);
 $("#darkThemeBtn").on("click", setDarkTheme);
@@ -868,12 +871,24 @@ function goBack(){
 $("#messageScroll").on('scroll', function() {
     var scrollTop = $(this).scrollTop();
 
-    if (scrollTop <= messageBufferDistance && Object.keys(messages).length != 0) {
+    if(messageScroll.scrollTop != (messageScroll.scrollHeight - messageScroll.offsetHeight)){ // If not scrolled to bottom
+        $("#scrollDownBtn").show();
+    }
+    else{
+        $("#scrollDownBtn").hide();
+        $("#scrollDownBtn sup").hide();
+    }
+
+    if(scrollTop <= messageBufferDistance && Object.keys(messages).length != 0) {
         var numOfMessages = Object.keys(messages).length;
         var reply = [randomKey, userId, clickedChat.id, username, numOfMessages, clickedChat.type];
         socket.emit("requestMessagesMore", reply);
     }
 });
+
+function scrollDown() {
+    document.getElementById("messageScroll").scrollTop = messageScroll.scrollHeight; // Scroll to bottom
+}
 
 function openMessagePage(c, type){
     function waitForConnection(){
@@ -901,6 +916,7 @@ function openMessagePage(c, type){
             }
 
             hideEverything();
+            $("#scrollDownBtn").hide();
             messagePageElement.show();
             aboutButtonElement.show();
             backButtonElement.show();
@@ -1016,7 +1032,6 @@ socket.on("messages", function(reply){
 
 socket.on("moreMessages", function(reply){
     messages = (reply[0].reverse()).concat(messages); // [[12, "test", timestamp], [25, "oh hi", timestamp]]
-    var messageScroll = document.getElementById("messageScroll");
 
     var scrollHeight = messageScroll.scrollHeight;
     var scrollLocation = $("#messageScroll").scrollTop();
@@ -1038,9 +1053,14 @@ socket.on("newMessage", function(incomingMessage) {
     if(clickedChat.id == chatId){ // If chat is open
         messages.push({messageId: messageId, senderId: senderId, message: message, timeSent: timeSent}); // add to messages
         
-        refreshMessagePage();
-
-        messageScroll.scrollTop = messageScroll.scrollHeight; // Scroll to bottom
+        if(messageScroll.scrollTop === (messageScroll.scrollHeight - messageScroll.offsetHeight)){ // If the user is scrolled to bottom
+            refreshMessagePage();
+            messageScroll.scrollTop = messageScroll.scrollHeight; // Scroll to bottom
+        }
+        else{
+            refreshMessagePage();
+            $("#scrollDownBtn sup").show();
+        }
 
         // Tell server you got the message
         socket.emit("receivedMessage", [username, randomKey, userId, clickedChat.id, clickedChat.type]);
