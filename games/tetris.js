@@ -10,7 +10,7 @@ var theme6 = "#3B97E0";
 
 var COLS = 14, ROWS = 20;
 var board = [];
-var lose = true;
+var lose = false;
 var interval;
 var intervalRender;
 var current; // current moving shape
@@ -88,16 +88,22 @@ window.openTetrisTab = function(){
                 theme6 = result["customThemes"][themeName]["theme6"];
             });
         }
-        if(lose){
-            chrome.storage.local.get(["tetrisGameBoard"], function(result) {
-                if(Object.keys(result).length != null){
-                    board = result["tetrisGameBoard"][0];
-                    score = result["tetrisGameBoard"][1];
+        chrome.storage.local.get(["tetrisGameBoard"], function(result) {
+            if(Object.keys(result).length != null){
+                board = result.tetrisGameBoard.board;
+                score = result.tetrisGameBoard.score;
+                currentX = result.tetrisGameBoard.currentX;
+                currentY = result.tetrisGameBoard.currentY;
+                current = result.tetrisGameBoard.current;
+
+                if(board == undefined || score == undefined){
+                    board = [];
+                    score = 0;
                 }
-            });
+            }
             newGame();
             document.addEventListener("keydown", restartTetris);
-        }
+        });
     });
 }
 
@@ -136,6 +142,8 @@ function init() {
             board[ y ][ x ] = 0;
         }
     }
+    score = 0;
+    newShape();
 }
 
 // keep the element moving down, creating new shapes and clearing lines
@@ -154,12 +162,18 @@ function tick() {
         clearLines();
         if (lose) {
             chrome.storage.local.set({tetrisGameBoard: undefined});
-            gameEnded();
+            clearAllIntervals();
+            setTimeout(gameEnded, 30);
             return false;
         }
         newShape();
-        chrome.storage.local.set({tetrisGameBoard: [board, score]});
     }
+
+    chrome.storage.local.set({tetrisGameBoard: {board: board, 
+                                                score: score, 
+                                                currentX: currentX, 
+                                                currentY: currentY, 
+                                                current: current}});
 }
 
 // stop shape at its position and fix it to board
@@ -286,13 +300,9 @@ function valid( offsetX, offsetY, newCurrent ) {
 }
 
 function newGame() {
-    score = 0;
     document.addEventListener("keydown", keydownFunction);
     clearAllIntervals();
     intervalRender = setInterval(render, renderInterval);
-    init();
-    newShape();
-    lose = false;
     interval = setInterval( tick, tickInterval);
 }
 
@@ -336,9 +346,13 @@ var W = 350, H = 500;
 var BLOCK_W = W / COLS, BLOCK_H = H / ROWS;
 
 // draw a single square at (x, y)
-function drawBlock(x, y, top, right, bot, left) { // if there is a connecting block on each side
+function drawBlock(x, y) { // if there is a connecting block on each side
     ctx.fillRect( BLOCK_W * x, BLOCK_H * y, BLOCK_W, BLOCK_H);
     ctx.strokeRect( BLOCK_W * x, BLOCK_H * y, BLOCK_W, BLOCK_H);
+}
+
+function drawShadowBlock(x, y) { // if there is a connecting block on each side
+    ctx.strokeRect((BLOCK_W*x)+2, (BLOCK_H*y)+2, BLOCK_W-4, BLOCK_H-4);
 }
 
 // draws the board and the moving shape
@@ -355,7 +369,8 @@ function render() {
         }
     }
 
-    ctx.strokeStyle = theme1;
+    ctx.strokeStyle = theme2;
+    ctx.lineWidth=0.5;
     yValid=0;
     while( valid(0, yValid) ) {
         ++yValid;
@@ -363,8 +378,7 @@ function render() {
     for (var y = 0; y < 4; ++y ) {
         for ( var x = 0; x < 4; ++x ) {
             if ( current[ y ][ x ] ) {
-                ctx.fillStyle = shadeColor(theme2, 0.7);
-                drawBlock(currentX + x, currentY + y + yValid - 1);
+                drawShadowBlock(currentX + x, currentY + y + yValid - 1);
             }
         }
     }
@@ -388,8 +402,7 @@ function render() {
 }
 
 function gameEnded() {
-    clearAllIntervals();
-    board = [];
+    lose = false;
     document.removeEventListener("keydown", keydownFunction);
     ctx.globalAlpha = 0.75;
     ctx.fillStyle = theme1;
@@ -443,6 +456,7 @@ function restartTetris(event){
     }
 
     if(event.keyCode==82){
+        init();
         newGame();
     }
 
