@@ -89,7 +89,7 @@ window.openTetrisTab = function(){
             });
         }
         chrome.storage.local.get(["tetrisGameBoard"], function(result) {
-            if(Object.keys(result).length != null){
+            if(Object.keys(result).length != 0){
                 board = result.tetrisGameBoard.board;
                 score = result.tetrisGameBoard.score;
                 currentX = result.tetrisGameBoard.currentX;
@@ -97,9 +97,16 @@ window.openTetrisTab = function(){
                 current = result.tetrisGameBoard.current;
 
                 if(board == undefined || score == undefined){
-                    board = [];
-                    score = 0;
+                    board = result.tetrisGameBoard[0];
+                    score = result.tetrisGameBoard[1];
+                    newShape();
                 }
+                else if(current == undefined){
+                    newShape();
+                }
+            }
+            else{
+                init();
             }
             newGame();
             document.addEventListener("keydown", restartTetris);
