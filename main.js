@@ -3,8 +3,8 @@
  * Whitebox test
 */
 
-var socket = io.connect('https://www.jblrd.com', {path: "/V2.0.3/whitebox-websocket/socket.io"});
-//var socket = io.connect('https://www.jblrd.com', {path: "/V2/whitebox-websocket-development/socket.io"});
+//var socket = io.connect('https://www.jblrd.com', {path: "/V2.0.3/whitebox-websocket/socket.io"});
+var socket = io.connect('https://www.jblrd.com', {path: "/V2/whitebox-websocket-development/socket.io"});
 
 socket.on("connected", function() {
     login();
@@ -1031,10 +1031,14 @@ socket.on("response", function(reply){
 });
 
 socket.on("messages", function(reply){
-    messages = reply[0].reverse(); // [[12, "test", timestamp], [25, "oh hi", timestamp]]
+    messages = reply[0].reverse();
+
+    console.log(JSON.stringify(messages, null, 2))
     
     refreshMessagePage();
+
     document.getElementById("messageScroll").scrollTop = messageScroll.scrollHeight; // Scroll to bottom
+    document.getElementsByClassName("new-msgs-div")[0].scrollIntoView(); // Scroll to new msg
 });
 
 socket.on("moreMessages", function(reply){
@@ -1129,12 +1133,15 @@ function refreshMessagePage() {
     var messageScroll = document.getElementById("messageScroll");
     messageScroll.innerHTML = "";
 
+    var displayedNewMsgsDiv = false;
+
     for(var i=0; i<messages.length; i++){
         var message = findLinks(decodeURIComponent(escape(messages[i].message)));
         var timeSent = messages[i].timeSent;
         var senderId = messages[i].senderId;
         var messageId = messages[i].messageId;
         var confirmed = messages[i].confirmed; // If it is confirmed by server
+        var newMessage = messages[i].newMessage;
 
         if(confirmed === undefined){
             confirmed = true;
@@ -1168,7 +1175,7 @@ function refreshMessagePage() {
         }
 
         // get last sender id
-        if(i == 0){
+        if(i == 0 || (newMessage && !displayedNewMsgsDiv)){ // If first message or right after a new messages divider
             lastMessageSenderId = null;
             lastTimeStamp = messages[0].timeSent;
         }
@@ -1215,6 +1222,17 @@ function refreshMessagePage() {
         // If not received by server 
         if(!confirmed){
             messageText.classList.add("unconfirmed");
+        }
+
+        if(newMessage && !displayedNewMsgsDiv){
+            var newMsgH6 = document.createElement("span");
+            newMsgH6.innerHTML = "new messages";
+
+            var newMsgDiv = document.createElement("div");
+            newMsgDiv.classList.add("new-msgs-div");
+            newMsgDiv.appendChild(newMsgH6);
+            messageScroll.appendChild(newMsgDiv);
+            displayedNewMsgsDiv = true;
         }
 
         messageDiv.appendChild(messageText);
@@ -1505,14 +1523,22 @@ socket.on("searchUsersReply", function(reply) {
     var matchingUsers = reply; //{userId: [name, lastOnline]}
     $("#matchingUsers").empty();
 
-    for(var i = 0; i<Object.keys(matchingUsers).length; i++){
-        var matchingUserId = Object.keys(matchingUsers)[i];
+    // Sort by num of mutual friends
+    var sortedUsers = Object.keys(matchingUsers).sort(function(a,b){
+        return matchingUsers[b][2]-matchingUsers[a][2];
+    });
+
+    console.log(JSON.stringify(reply, null, 2))
+
+    for(var i = 0; i<sortedUsers.length; i++){
+        var matchingUserId = sortedUsers[i];
         var matchingUserName = matchingUsers[matchingUserId][0];
         var matchingUserLastOnline = matchingUsers[matchingUserId][1];
         var usersElement = document.getElementById("matchingUsers");
+        console.log((friends != undefined && matchingUserId in friends))
 
         if((friends != undefined && matchingUserId in friends) || matchingUserId == userId){
-            break; // Already friends
+            continue; // Already friends
         }
 
         var button = document.createElement("button");
