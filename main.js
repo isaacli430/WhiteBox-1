@@ -1136,7 +1136,7 @@ function refreshMessagePage() {
     var displayedNewMsgsDiv = false;
 
     for(var i=0; i<messages.length; i++){
-        var message = findLinks(decodeURIComponent(escape(messages[i].message)));
+        var message = findLinks(escapeHtml(decodeURIComponent(escape(messages[i].message))));
         var timeSent = messages[i].timeSent;
         var senderId = messages[i].senderId;
         var messageId = messages[i].messageId;
@@ -1217,7 +1217,7 @@ function refreshMessagePage() {
 
         var messageText = document.createElement("h6");
         messageText.classList.add("message");
-        messageText.innerHTML = escapeHtml(message);
+        messageText.innerHTML = message;
 
         // If not received by server 
         if(!confirmed){
@@ -1896,9 +1896,9 @@ $("#make-group-tab").on('show.bs.tab', function(){
 
 function escapeHtml(unsafe) {
     return unsafe
-         .replace(/&/g, "&amp;")
-         .replace(/</g, "&lt;")
-         .replace(/>/g, "&gt;")
-         .replace(/"/g, "&quot;")
-         .replace(/'/g, "&#039;");
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
  }
