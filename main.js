@@ -3,8 +3,8 @@
  * Whitebox test
 */
 
-//var socket = io.connect('https://www.jblrd.com', {path: "/V2.0.3/whitebox-websocket/socket.io"});
-var socket = io.connect('https://www.jblrd.com', {path: "/V2/whitebox-websocket-development/socket.io"});
+var socket = io.connect('https://www.jblrd.com', {path: "/V2.0.10/whitebox-websocket/socket.io"});
+//var socket = io.connect('https://www.jblrd.com', {path: "/V2/whitebox-websocket-development/socket.io"});
 
 socket.on("connected", function() {
     login();
@@ -1032,8 +1032,6 @@ socket.on("response", function(reply){
 
 socket.on("messages", function(reply){
     messages = reply[0].reverse();
-
-    console.log(JSON.stringify(messages, null, 2))
     
     refreshMessagePage();
 
@@ -1175,7 +1173,8 @@ function refreshMessagePage() {
         }
 
         // get last sender id
-        if(i == 0 || (newMessage && !displayedNewMsgsDiv)){ // If first message or right after a new messages divider
+        // If first message or right after a new messages divider (if a group chat)
+        if(i == 0 || (newMessage && !displayedNewMsgsDiv && clickedChat.type == 1)){
             lastMessageSenderId = null;
             lastTimeStamp = messages[0].timeSent;
         }
@@ -1224,7 +1223,8 @@ function refreshMessagePage() {
             messageText.classList.add("unconfirmed");
         }
 
-        if(newMessage && !displayedNewMsgsDiv){
+        // if the message is new, and new messages divider not displayed and it is a group chat
+        if(newMessage && !displayedNewMsgsDiv && clickedChat.type == 1){ 
             var newMsgH6 = document.createElement("span");
             newMsgH6.innerHTML = "new messages";
 
