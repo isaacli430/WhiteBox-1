@@ -53,6 +53,7 @@ var shapes = [
      0,0,0,0]
 ];
 var score = 0;
+var shapeBag = [];
 
 var renderInterval = 30
 var tickInterval = 1000;
@@ -117,7 +118,16 @@ window.openTetrisTab = function(){
 // create a new 4x4 shape in global variable 'current'
 // 4x4 so as to cover the size when the shape is rotated
 function newShape() {
-    var id = Math.floor( Math.random() * shapes.length );
+    // If shape bag is empty
+    if(shapeBag.length == 0){
+        shapeBag = shuffle([0, 1, 2, 3, 4, 5, 6]);
+    }
+
+    console.log(shapeBag)
+
+    var id = shapeBag[shapeBag.length-1]; // Get last element from list
+    shapeBag.pop(); // remove last element from list
+
     var shape = shapes[id]; // maintain id for color filling
 
     current = [];
@@ -474,6 +484,25 @@ function restartTetris(event){
 
 function setColor(number){
     return shadeColor(theme2, number/12);
+}
+
+function shuffle(array) {
+  var currentIndex = array.length, temporaryValue, randomIndex;
+
+  // While there remain elements to shuffle...
+  while (0 !== currentIndex) {
+
+    // Pick a remaining element...
+    randomIndex = Math.floor(Math.random() * currentIndex);
+    currentIndex -= 1;
+
+    // And swap it with the current element.
+    temporaryValue = array[currentIndex];
+    array[currentIndex] = array[randomIndex];
+    array[randomIndex] = temporaryValue;
+  }
+
+  return array;
 }
 
 function shadeColor(c0, p) {  
