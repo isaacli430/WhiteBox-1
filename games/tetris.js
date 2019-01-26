@@ -52,8 +52,47 @@ var shapes = [
      0,1,1,1,
      0,0,0,0]
 ];
+var smallShapes = [
+    [[0,1],
+     [0,1],
+     [0,1],
+     [0,1]],
+
+    [[1,1],
+     [0,1],
+     [0,1],
+     [0,0]],
+
+    [[1,1],
+     [1,0],
+     [1,0],
+     [0,0]],
+
+    [[0,0],
+     [1,1],
+     [1,1],
+     [0,0]],
+
+    [[0,1],
+     [1,1],
+     [1,0],
+     [0,0]],
+
+    [[1,0],
+     [1,1],
+     [0,1],
+     [0,0]],
+
+    [[1,0],
+     [1,1],
+     [1,0],
+     [0,0]]
+];
 var score = 0;
 var shapeBag = [];
+var heldShapeId;
+var currentId;
+var canHoldShape = true;
 
 var renderInterval = 30
 var tickInterval = 1000;
@@ -90,12 +129,15 @@ window.openTetrisTab = function(){
             });
         }
         chrome.storage.local.get(["tetrisGameBoard"], function(result) {
-            if(Object.keys(result).length != 0){
+            if(Object.keys(result).length != 0 && Object.keys(result.tetrisGameBoard).length != 0){
                 board = result.tetrisGameBoard.board;
                 score = result.tetrisGameBoard.score;
                 currentX = result.tetrisGameBoard.currentX;
                 currentY = result.tetrisGameBoard.currentY;
                 current = result.tetrisGameBoard.current;
+                heldShapeId = result.tetrisGameBoard.heldShapeId;
+                currentId = result.tetrisGameBoard.currentId;
+                canHoldShape = result.tetrisGameBoard.canHoldShape;
 
                 if(board == undefined || score == undefined){
                     board = result.tetrisGameBoard[0];
@@ -117,18 +159,21 @@ window.openTetrisTab = function(){
 
 // create a new 4x4 shape in global variable 'current'
 // 4x4 so as to cover the size when the shape is rotated
-function newShape() {
-    // If shape bag is empty
-    if(shapeBag.length == 0){
-        shapeBag = shuffle([0, 1, 2, 3, 4, 5, 6]);
+function newShape(shapeId) {
+    if(shapeId == null){
+        // If shape bag is empty
+        if(shapeBag.length == 0){
+            shapeBag = shuffle([0, 1, 2, 3, 4, 5, 6]);
+        }
+
+        currentId = shapeBag[shapeBag.length-1]; // Get last element from list
+        shapeBag.pop(); // remove last element from list
+    }
+    else{
+        currentId = shapeId;
     }
 
-    console.log(shapeBag)
-
-    var id = shapeBag[shapeBag.length-1]; // Get last element from list
-    shapeBag.pop(); // remove last element from list
-
-    var shape = shapes[id]; // maintain id for color filling
+    var shape = shapes[currentId]; // maintain id for color filling
 
     current = [];
     for ( var y = 0; y < 4; ++y ) {
@@ -136,7 +181,7 @@ function newShape() {
         for ( var x = 0; x < 4; ++x ) {
             var i = 4 * y + x;
             if ( typeof shape[ i ] != 'undefined' && shape[ i ] ) {
-                current[ y ][ x ] = id + 1;
+                current[ y ][ x ] = currentId + 1;
             }
             else {
                 current[ y ][ x ] = 0;
@@ -160,6 +205,9 @@ function init() {
         }
     }
     score = 0;
+    heldShapeId = undefined;
+    currentId = undefined;
+    canHoldShape = true;
     newShape();
 }
 
@@ -184,13 +232,17 @@ function tick() {
             return false;
         }
         newShape();
+        canHoldShape = true;
     }
 
     chrome.storage.local.set({tetrisGameBoard: {board: board, 
                                                 score: score, 
                                                 currentX: currentX, 
                                                 currentY: currentY, 
-                                                current: current}});
+                                                current: current,
+                                                heldShapeId: heldShapeId,
+                                                currentId: currentId,
+                                                canHoldShape: canHoldShape}});
 }
 
 // stop shape at its position and fix it to board
@@ -285,6 +337,14 @@ function keyPress( key ) {
             }
             tick();
             break;
+        case 'hold':
+            if(canHoldShape){
+                var lastShapeId = currentId;
+                newShape(heldShapeId);
+                heldShapeId = lastShapeId;
+                canHoldShape = false;
+            }
+            break;
     }
 }
 
@@ -335,7 +395,6 @@ function refreshIntervals(){
     intervalRender = setInterval(render, renderInterval);
 }
 
-
 function keydownFunction(e) {
     if($('a[data-toggle="tab"].active').attr("href")!="#tetris"){
         document.removeEventListener("keydown", keydownFunction);
@@ -348,7 +407,8 @@ function keydownFunction(e) {
         39: 'right',
         40: 'down',
         38: 'rotate',
-        32: 'drop'
+        32: 'drop',
+        16: 'hold'
     };
     if (typeof keys[ e.keyCode ] != 'undefined') {
         keyPress( keys[ e.keyCode ] );
@@ -361,11 +421,18 @@ var canvas = document.getElementById("tetrisCanvas");
 var ctx = canvas.getContext('2d');
 var W = 350, H = 500;
 var BLOCK_W = W / COLS, BLOCK_H = H / ROWS;
+var SMALL_BLOCK_W = 16;
+var SMALL_BLOCK_H = 16;
 
 // draw a single square at (x, y)
 function drawBlock(x, y) { // if there is a connecting block on each side
     ctx.fillRect( BLOCK_W * x, BLOCK_H * y, BLOCK_W, BLOCK_H);
     ctx.strokeRect( BLOCK_W * x, BLOCK_H * y, BLOCK_W, BLOCK_H);
+}
+
+function drawSmallBlock(x, y, offsetX, offsetY) { // if there is a connecting block on each side
+    ctx.fillRect(SMALL_BLOCK_W*x + offsetX, SMALL_BLOCK_W*y + offsetY, SMALL_BLOCK_W, SMALL_BLOCK_W);
+    ctx.strokeRect(SMALL_BLOCK_H*x + offsetX, SMALL_BLOCK_H*y + offsetY, SMALL_BLOCK_H, SMALL_BLOCK_H);
 }
 
 function drawShadowBlock(x, y) { // if there is a connecting block on each side
@@ -415,7 +482,47 @@ function render() {
     ctx.font="Bold 15px Verdana";
     ctx.textAlign = "right";
     ctx.textBaseline="bottom"; 
-    ctx.fillText("Score: "+score,350,15); 
+    ctx.fillText("Score: "+score,350,15);
+
+    // Draw hold and next piece
+    ctx.fillStyle = theme2;
+    ctx.font="Bold 10px Verdana";
+    ctx.textAlign = "center";
+    ctx.textBaseline="top"; 
+    ctx.fillText("HOLD",20,1);
+
+    var heldShape = smallShapes[heldShapeId]; // maintain id for color filling
+
+    if(heldShape != null){
+        ctx.strokeStyle = theme1;
+        ctx.lineWidth=2;
+        for(var y = 0; y < 4; ++y){
+            for(var x = 0; x < 2; ++x){
+                if(heldShape[y][x]) {
+                    drawSmallBlock(x, y, 4, 14);
+                }
+            }
+        }
+    }
+
+    ctx.fillText("NEXT",60,1);
+    // If shape bag is empty
+    if(shapeBag.length == 0){
+        shapeBag = shuffle([0, 1, 2, 3, 4, 5, 6]);
+    }
+
+    var id = shapeBag[shapeBag.length-1]; // Get last element from list
+    var shape = smallShapes[id]; // maintain id for color filling
+
+    ctx.strokeStyle = theme1;
+    ctx.lineWidth=2;
+    for(var y = 0; y < 4; ++y){
+        for(var x = 0; x < 2; ++x){
+            if(shape[y][x]) {
+                drawSmallBlock(x, y, 44, 14);
+            }
+        }
+    }
 }
 
 function gameEnded() {
