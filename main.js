@@ -1,10 +1,10 @@
 /* Made By Joshua Bird
  *
- * Whitebox test
+ * Whitebox
 */
 
-var socket = io.connect('https://www.jblrd.com', {path: "/V2.0.10/whitebox-websocket/socket.io"});
-//var socket = io.connect('https://www.jblrd.com', {path: "/V2/whitebox-websocket-development/socket.io"});
+//var socket = io.connect('https://www.jblrd.com', {path: "/V2.0.10/whitebox-websocket/socket.io"});
+var socket = io.connect('https://www.jblrd.com', {path: "/V2/whitebox-websocket-development/socket.io"});
 
 socket.on("connected", function() {
     login();
@@ -1002,6 +1002,10 @@ $(document).keydown(function(e){
         e.preventDefault();
         $(".modal").modal("hide");
         goBack();
+    }
+    else if($("#friends").is(":visible")){
+        var input = document.getElementById("friendsSearch");
+        input.focus();
     }
 });
 
