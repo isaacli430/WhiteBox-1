@@ -376,7 +376,7 @@ $("#login-form").submit(function(event) {
     var loginUsername = $("#loginUsername").val();
     var loginPassword = $("#loginPassword").val();
 
-    socket.emit("userLogin", [loginUsername, loginPassword, softwareVersion]);
+    socket.emit("userLogin", {username: loginUsername, password: loginPassword, softwareVersion: softwareVersion});
 });
 
 function login() {
@@ -926,6 +926,14 @@ function openMessagePage(c, type){
     }
     waitForConnection();
 }
+
+$("#message").focus(function(){
+    socket.emit("startedTyping", {chatId: clickedChat.id, type: clickedChat.type});
+});
+
+$("#message").focusout(function(){
+    socket.emit("stoppedTyping", {chatId: clickedChat.id, type: clickedChat.type});
+});
 
 function searchUsers(){
     var usernameToSearch = $("#userSearchInput").val();
