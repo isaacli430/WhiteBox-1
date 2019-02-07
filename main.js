@@ -841,6 +841,8 @@ socket.on("changeUsernameConfirm", function(reply){
 });
 
 function goBack(){
+    stoppedTyping();
+
     clickedChat = undefined;
     hideEverything();
 
@@ -897,12 +899,7 @@ function openMessagePage(c, type){
 
             $("#messageScroll").contents().remove();
             $("#messagePageName").text(clickedChat.name);
-            if(clickedChat.type == 0){ // Friend
-                $("#messagePageLastOnline").text("Last Online: "+calcLastOnline(friends[clickedChat.id][3]));
-            }
-            else if(clickedChat.type == 1){
-                $("#messagePageLastOnline").text("");
-            }
+            $("#messagePageLastOnline").text("");
 
             hideEverything();
             $("#scrollDownBtn").hide();
@@ -918,10 +915,84 @@ function openMessagePage(c, type){
 
 $("#message").focus(function(){
     socket.emit("startedTyping", {chatId: clickedChat.id, type: clickedChat.type});
+    checkIdle();
 });
 
 $("#message").focusout(function(){
-    socket.emit("stoppedTyping", {chatId: clickedChat.id, type: clickedChat.type});
+    stoppedTyping();
+});
+
+function stoppedTyping() {
+    socket.emit("stoppedTyping");
+    clearInterval(idleInterval);
+}
+
+var idleInterval;
+// Check if idle
+function checkIdle(){
+    var idleTime = 0;
+    //Increment the idle time counter every minute.
+    idleInterval = setInterval(timerIncrement, 1000);
+
+    $(this).keypress(function (e) {
+        idleTime = 0;
+    });
+
+    function timerIncrement() {
+        idleTime = idleTime + 1;
+        if (idleTime > 29) { // 30 seconds
+            stoppedTyping();
+            idleTime = 0;
+        }
+    }
+}
+
+socket.on("isTyping", function(reply){
+    var chatId = reply.chatId;
+    var chatType = reply.chatType;
+    var isTyping = reply.isTyping;
+    var isOnline = reply.isOnline;
+    var fadeTime = 200;
+
+    if(clickedChat.id == chatId && clickedChat.type == chatType){ // If still in the right chat
+        if(chatType == 0){ // If friend
+            if(isTyping){
+                $("#messagePageLastOnline").fadeOut(fadeTime, function() {
+                    $(this).text("typing...");
+                }).fadeIn(fadeTime);
+            }
+            else if(!isTyping){
+                $("#messagePageLastOnline").fadeOut(fadeTime, function(){
+                    if(isOnline){
+                        $("#messagePageLastOnline").text("Last Online: now");
+                    }
+                    else{
+                        $("#messagePageLastOnline").text("Last Online: "+calcLastOnline(friends[clickedChat.id][3]));
+                    }
+                }).fadeIn(fadeTime);
+            }
+        }
+        else if(chatType == 1){ // If group
+
+            var peopleTyping = "";
+
+            for (var i = 0; i < isTyping.length; i++) {
+                var memberId = isTyping[i].userId;
+                var memberName = groups[clickedChat.id][3][memberId].username;
+
+                if(memberId != userId){
+                    peopleTyping += (memberName+" is typing, ");
+                }
+            }
+
+            if(peopleTyping.length != 0){ // If someone is typing, chop off last ", "
+                peopleTyping = peopleTyping.substring(0, peopleTyping.length - 2);
+            }
+            $("#messagePageLastOnline").fadeOut(fadeTime, function(){
+                $("#messagePageLastOnline").text(peopleTyping);
+            }).fadeIn(fadeTime);
+        }
+    }
 });
 
 function searchUsers(){
