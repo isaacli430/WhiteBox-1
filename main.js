@@ -53,7 +53,7 @@ var mainTabs = $("#mainTabs");
 
 // Login
 var softwareVersion = chrome.runtime.getManifest().version;
-$("#aboutPageContents").append("<br>Version: "+softwareVersion);
+$("#aboutPageSoftwareVersion").text("Version: "+softwareVersion);
 
 hideEverything();
 mainTabs.show();
