@@ -1,0 +1,22 @@
+#! /bin/bash
+
+rm -rf ~/Documents/WhiteBoxProduction/
+cp -r ~/Documents/WhiteBox/WhiteBox ~/Documents/WhiteBoxProduction
+rm -rf ~/Documents/WhiteBoxProduction/games/
+rm ~/Documents/WhiteBoxProduction/main.js
+rm ~/Documents/WhiteBoxProduction/PrepareWhiteBox
+uglifyjs-folder ~/Documents/WhiteBox/WhiteBox/ -yo ~/Documents/WhiteBoxProduction/whitebox.min.js -p "**/main.js,**/games/*.js"
+sed '/<!-- Development Files Start -->/,/<!-- Development Files End -->/d' ~/Documents/WhiteBox/WhiteBox/main.html > ~/Documents/WhiteBoxProduction/main.html
+echo "//  __        ___     _ _       ____            
+//  \ \      / / |__ (_) |_ ___| __ )  _____  __
+//   \ \ /\ / /| '_ \| | __/ _ \  _ \ / _ \ \/ /
+//    \ V  V / | | | | | ||  __/ |_) | (_) >  < 
+//     \_/\_/  |_| |_|_|\__\___|____/ \___/_/\_\\
+//           -A passion project from Joshua Bird
+//
+//  If you are looking at this right now you are
+//  probably trying to cheat in a game. If you
+//  do, you will be permanently banned without
+//  notice.
+" | cat - ~/Documents/WhiteBoxProduction/whitebox.min.js > temp && mv temp ~/Documents/WhiteBoxProduction/whitebox.min.js
+zip -r ~/Documents/WhiteBoxProduction.zip ~/Documents/WhiteBoxProduction/

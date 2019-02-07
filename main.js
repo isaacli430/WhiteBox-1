@@ -1,8 +1,15 @@
-/* Made By Joshua Bird
- *
- * Whitebox
-*/
-
+//  __        ___     _ _       ____            
+//  \ \      / / |__ (_) |_ ___| __ )  _____  __
+//   \ \ /\ / /| '_ \| | __/ _ \  _ \ / _ \ \/ /
+//    \ V  V / | | | | | ||  __/ |_) | (_) >  < 
+//     \_/\_/  |_| |_|_|\__\___|____/ \___/_/\_\
+//           -A passion project from Joshua Bird
+//
+//  If you are looking at this right now you are
+//  probably trying to cheat in a game. If you
+//  do, you will be permanently banned without
+//  notice.
+                                             
 var socket = io.connect('https://www.jblrd.com', {path: "/V2.0.11/whitebox-websocket/socket.io"});
 //var socket = io.connect('https://www.jblrd.com', {path: "/V2/whitebox-websocket-development/socket.io"});
 
