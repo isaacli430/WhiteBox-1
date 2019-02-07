@@ -406,7 +406,7 @@ function login() {
             username = result.whiteboxUsername;
             var validator = result.validator;
 
-            socket.emit("autoLogin", [userId, validator, softwareVersion, username]);
+            socket.emit("autoLogin", {userId: userId, validator: validator, softwareVersion: softwareVersion, username: username});
         }
     });
 }
@@ -441,14 +441,15 @@ socket.on("loginReply", function(reply){
         chrome.storage.local.set({whiteboxUsername: username});
         chrome.storage.sync.set({randomKey: null});
         
-        socket.emit("refreshUsers", [randomKey, userId, username]);
+        socket.emit("refreshUsers", {username: username});
     }
 });
 
 function logout() {
     chrome.storage.local.get(["validator"], function(result) {
         if(result.validator != null){
-            socket.emit("logout", [userId, username, result.validator]);
+            var validator = result.validator;
+            socket.emit("logout", {username: username, validator: validator});
         }
 
         chrome.storage.local.clear();
@@ -487,22 +488,10 @@ $("#create-account-form").submit(function(event) {
         $("#create-account-password").attr("placeholder", "Password too short");
     }
     else{
-        chrome.storage.sync.get(["randomKey", "whiteboxId"], function(result) {
-            if(("randomKey" in result) && result.randomKey != null){
-                socket.emit("updateAccount", [createAccountUsername, 
-                                              createAccountEmail,
-                                              createAccountPassword,
-                                              softwareVersion,
-                                              result.randomKey,
-                                              result.whiteboxId]);
-            }
-            else{
-                socket.emit("createAccount", [createAccountUsername, 
-                                              createAccountEmail,
-                                              createAccountPassword,
-                                              softwareVersion]);
-            }
-        });
+        socket.emit("createAccount", {username: createAccountUsername, 
+                                      email: createAccountEmail,
+                                      password: createAccountPassword,
+                                      softwareVersion: softwareVersion});
     }
 });
 
@@ -528,15 +517,15 @@ socket.on("createAccountReply", function(reply){
 });
 
 $("#friends-tab").on('show.bs.tab', function(){
-    socket.emit("refreshUsers", [randomKey, userId, username]);
+    socket.emit("refreshUsers", {username: username});
 });
 
 $("#friend-requests-tab").on('show.bs.tab', function(){
-    socket.emit("pendingFriendRequests", [userId, randomKey, username]);
+    socket.emit("pendingFriendRequests", {username: username});
 });
 
 $("#sent-friend-requests-tab").on('show.bs.tab', function(){
-    socket.emit("sentFriendRequests", [userId, randomKey, username]);
+    socket.emit("sentFriendRequests", {username: username});
 });
 
 $("#settings-tab").on('show.bs.tab', function(){
@@ -544,7 +533,7 @@ $("#settings-tab").on('show.bs.tab', function(){
 });
 
 $("#add-friends-tab").on('show.bs.tab', function(){
-    socket.emit("searchUsers", [userId, randomKey, username, ""]);
+    socket.emit("searchUsers", {username: username, usernameToSearch: ""});
 });
 
 function refreshSettingsPage() {
@@ -646,7 +635,7 @@ function promptDeleteAccount(){
 
 function deleteAccount(){
     hideEverything();
-    socket.emit("deleteUser", [userId, randomKey, username]);
+    socket.emit("deleteUser", {username: username});
     socket.disconnect();
     aboutButtonElement.show();
     chrome.storage.local.clear();
@@ -666,7 +655,7 @@ function changeUsername(){
         document.getElementById("changeUsernameInput").placeholder="Username too long";
     }
     else if(newUsername) {
-        socket.emit("changeUsername", [userId, randomKey, username, newUsername]);
+        socket.emit("changeUsername", {username: username, newUsername: newUsername});
         $("#confirmChangeUsernameModal").modal("hide");
         document.getElementById("changeUsernameInput").value = "";
     } 
@@ -765,9 +754,9 @@ $("#addFriendToGroupBtn").on("click", function() {
             var friendId = $(this).attr("data-friendId");
 
             if(!(friendId in groupMembers && groupMembers[friendId].status != 0)){
-                socket.emit("addFriendToGroup", [userId, username, clickedChat.id, friendId]);
+                socket.emit("addFriendToGroup", {username: username, groupId: clickedChat.id, friendId: friendId});
                 $('button[data-friendId="'+friendId+'"] > i').attr("class", "fas fa-check fa-fw");
-                socket.emit("refreshUsers", [randomKey, userId, username]);
+                socket.emit("refreshUsers", {username: username});
             }
         });
     });
@@ -831,15 +820,15 @@ $("#seeGroupMembersBtn").on("click", function() {
 
     function removeMemberFromGroup(memberId){
         var memberName = groupMembers[memberId].username;
-        socket.emit("removeMemberFromGroup", [userId, username, clickedChat.id, memberId, memberName]);
-        socket.emit("refreshUsers", [randomKey, userId, username]);
+        socket.emit("removeMemberFromGroup", {username: username, groupId: clickedChat.id, memberId: memberId, memberName: memberName});
+        socket.emit("refreshUsers", {username: username});
         $("#seeGroupMembersTable>tr[data-memberId='"+ memberId +"']").remove();
     }
 });
 
 $("#leaveGroupBtn").on("click", function() {
-    socket.emit("removeMemberFromGroup", [userId, username, clickedChat.id, userId]);
-    socket.emit("refreshUsers", [randomKey, userId, username]);
+    socket.emit("removeMemberFromGroup", {username: username, groupId: clickedChat.id, memberId: memberId, memberName: memberName});
+    socket.emit("refreshUsers", {username: username});
     $("#groupSettingsModal").modal("hide");
     goBack();
 });
@@ -860,7 +849,7 @@ function goBack(){
     }
     else{
         mainTabs.show();
-        socket.emit("refreshUsers", [randomKey, userId, username]);
+        socket.emit("refreshUsers", {username: username});
     }
 
     aboutButtonElement.show();
@@ -881,8 +870,8 @@ $("#messageScroll").on('scroll', function() {
 
     if(scrollTop <= messageBufferDistance && Object.keys(messages).length != 0) {
         var numOfMessages = Object.keys(messages).length;
-        var reply = [randomKey, userId, clickedChat.id, username, numOfMessages, clickedChat.type];
-        socket.emit("requestMessagesMore", reply);
+        var chatType = clickedChat.type;
+        socket.emit("requestMessagesMore", {clickedId: clickedChat.id, username: username, startIndex: numOfMessages, chatType: chatType});
     }
 });
 
@@ -920,8 +909,8 @@ function openMessagePage(c, type){
             messagePageElement.show();
             aboutButtonElement.show();
             backButtonElement.show();
-            var reply = [randomKey, userId, c, username, type];
-            socket.emit("requestMessages", reply);
+            socket.emit("requestMessages", {clickedId: c, username: username, chatType: type});
+            socket.emit("isTyping", {chatId: c, chatType: type});
         }
     }
     waitForConnection();
@@ -938,7 +927,7 @@ $("#message").focusout(function(){
 function searchUsers(){
     var usernameToSearch = $("#userSearchInput").val();
 
-    socket.emit("searchUsers", [userId, randomKey, username, usernameToSearch]);
+    socket.emit("searchUsers", {username: username, usernameToSearch: usernameToSearch});
 }
 
 function sendMessage(){
@@ -951,20 +940,21 @@ function sendMessage(){
 
     message = unescape(encodeURIComponent(message));
 
-    var reply = [username, randomKey, message, clickedChat.id, userId, clickedChat.name, clickedChat.type];
-
     // add to messages
     messages.push({messageId: null, senderId: userId, message: message, timeSent: unixTime, confirmed: false});
     refreshMessagePage();
     messageScroll.scrollTop = messageScroll.scrollHeight; // Scroll to bottom
 
     // Send message to server
-    socket.emit("message", reply);
+    var receiverId = clickedChat.id;
+    var receiverName = clickedChat.name;
+    var chatType = clickedChat.type;
+    socket.emit("message", {username: username, message: message, receiverId: receiverId, receiverName: receiverName, chatType: chatType});
 }
 
 function friendRequest(requesteeId){
     $("#matchingUsers [data-matchinguserid = \""+requesteeId+"\"]").attr("class", "fas fa-check fa-fw");
-    socket.emit("friendRequest", [userId, randomKey, requesteeId, username]);
+    socket.emit("friendRequest", {requesteeId: requesteeId, username: username});
 }
 
 function calcLastOnline(lastOnline) {
@@ -1033,7 +1023,7 @@ socket.on("response", function(reply){
     }
     else{
         userId = reply;
-        socket.emit("refreshUsers", [randomKey, userId, username]);
+        socket.emit("refreshUsers", {username: username});
         hideEverything();
         mainTabs.show();
         chrome.storage.local.set({whiteboxUsername: username});
@@ -1048,7 +1038,9 @@ socket.on("messages", function(reply){
     refreshMessagePage();
 
     document.getElementById("messageScroll").scrollTop = messageScroll.scrollHeight; // Scroll to bottom
-    document.getElementsByClassName("new-msgs-div")[0].scrollIntoView(); // Scroll to new msg
+    if($(".new-msgs-div")[0]){
+        document.getElementsByClassName("new-msgs-div")[0].scrollIntoView(); // Scroll to new msg
+    }
 });
 
 socket.on("moreMessages", function(reply){
@@ -1084,7 +1076,9 @@ socket.on("newMessage", function(incomingMessage) {
         }
 
         // Tell server you got the message
-        socket.emit("receivedMessage", [username, randomKey, userId, clickedChat.id, clickedChat.type]);
+        senderId = clickedChat.id;
+        var chatType = clickedChat.type;
+        socket.emit("receivedMessage", {receiverName: username, senderId: senderId, chatType: chatType});
     }
 });
 
@@ -1446,7 +1440,9 @@ function refreshChats(reply){
 }
 
 function getDeleteMsg(){
-    socket.emit("getDeleteMsg", [userId, username, clickedChat.id, clickedChat.type]);
+    var chatId = clickedChat.id;
+    var chatType = clickedChat.type;
+    socket.emit("getDeleteMsg", {username: username, chatId: chatId, chatType: chatType});
 }
 
 socket.on("deleteMsgReply", function(reply) {
@@ -1463,12 +1459,14 @@ socket.on("deleteMsgReply", function(reply) {
 
 $("#deleteMsgSelectFriend").change(function() {
     var selection = $("#deleteMsgSelectFriend").val();
-    socket.emit("setDeleteMsg", [userId, randomKey, username, clickedChat.id, selection, clickedChat.type]);
+    var chatId = clickedChat.id;
+    var chatType = clickedChat.type;
+    socket.emit("setDeleteMsg", {username: username, friendId: chatId, selection: selection, chatType: chatType});
 });
 
 $("#deleteMsgSelectGroup").change(function() {
     var selection = $("#deleteMsgSelectGroup").val();
-    socket.emit("setDeleteMsg", [userId, randomKey, username, clickedChat.id, selection, clickedChat.type]);
+    socket.emit("setDeleteMsg", {username: username, friendId: chatId, selection: selection, chatType: chatType});
 });
 
 function confirmUnfriendModal(friendId) {
@@ -1478,14 +1476,15 @@ function confirmUnfriendModal(friendId) {
 }
 
 function unfriendFriend() {
-    socket.emit("unfriendFriend", [userId, randomKey, username, clickedChat.id]);
+    var friendId = clickedChat.id;
+    socket.emit("unfriendFriend", {username: username, friendId: friendId});
     $("tr[data-friendId="+clickedChat.id+"]").remove();
     $("#confirmUnfriendModal").modal("hide");
     goBack();
 }
 
-function seeFriendsModal(friendId) {
-    socket.emit("seeFriends", [userId, randomKey, username, friendId]);
+function seeFriendsModal(friendId) { 
+    socket.emit("seeFriends", {username: username, friendId: friendId});
 }
 
 socket.on("unacceptedRequests", function(unacceptedRequests) {
@@ -1625,12 +1624,12 @@ socket.on("friendRequests", function(reply) {
     }
 
     function acceptFriendRequest(requesterId){
-        socket.emit("acceptFriendRequest", [userId, randomKey, requesterId, username]);
+        socket.emit("acceptFriendRequest", {requesterId: requesterId, username: username});
         $('i[data-requesterId="'+requesterId+'"]').closest("tr").remove();
     }
 
     function declineFriendRequest(requesterId){
-        socket.emit("declineFriendRequest", [userId, randomKey, requesterId, username]);
+        socket.emit("declineFriendRequest", {requesterId: requesterId, username: username});
         $('i[data-requesterId="'+requesterId+'"]').closest("tr").remove();
     }
 });
@@ -1703,7 +1702,7 @@ socket.on("friendRequestStatus", function (status, requesteeId){
 });
 
 socket.on("refreshFriends", function(){
-    socket.emit("refreshUsers", [randomKey, userId, username]);
+    socket.emit("refreshUsers", {username: username});
 });
 
 $("#snake-tab").on('show.bs.tab', function(){
@@ -1758,11 +1757,11 @@ socket.on("gameHighscores", function(reply) {
 });
 
 function getGameHighScores(game) {
-    socket.emit("getGameHighScores", [userId, randomKey, username, game]); 
+    socket.emit("getGameHighScores", {username: username, gameName: game}); 
 }
 
 function gameHighScore(game, score) {
-    socket.emit("gameHighScore", [userId, randomKey, username, game, score]);  
+    socket.emit("gameHighScore", {username: username, gameName: game, score: score});  
 }
 
 chrome.permissions.contains({origins: ["https://www.jblrd.com/"]}, function(result) {
@@ -1896,7 +1895,7 @@ $("#make-group-tab").on('show.bs.tab', function(){
             $("#makeGroupName").attr("placeholder", "Group Name");
             $('#makeGroupName').removeAttr("style");
 
-            socket.emit("makeGroup", [userId, username, groupName, friendsInGroup]);
+            socket.emit("makeGroup", {username: username, groupName: groupName, groupMembers: friendsInGroup});
         }
     });
 
@@ -1913,4 +1912,4 @@ function escapeHtml(unsafe) {
         .replace(/>/g, "&gt;")
         .replace(/"/g, "&quot;")
         .replace(/'/g, "&#039;");
- }
+}
