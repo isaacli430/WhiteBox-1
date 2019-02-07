@@ -21,7 +21,10 @@ if(!notificationInterval){
 
 function checkForNotifications(){
     var http = new XMLHttpRequest();
+
     http.open("POST", "https://www.jblrd.com/whitebox-api/checkfornotifications", true);
+    //http.open("POST", "https://www.jblrd.com/whitebox-api-development/checkfornotifications", true);
+
     http.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
     http.setRequestHeader("software-version", softwareVersion);
     var params = "validator="+validator+"&userId="+userId;
