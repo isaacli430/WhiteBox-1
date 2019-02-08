@@ -905,7 +905,7 @@ function openMessagePage(c, type){
             clickedChat = {id: c, type: type, name: clickedName};
 
             $("#messageScroll").contents().remove();
-            $("#messagePageName").text(clickedChat.name);
+            $("#messagePageName").html(clickedChat.name);
             $("#messagePageLastOnline").text("");
 
             hideEverything();
@@ -1205,7 +1205,21 @@ socket.on("messageConfirm", function(reply) {
 
 socket.on("refreshedUsers", function(reply) {
     friends = reply[0]; // {userId: [name, view status, last activity, last online], ...}
-    groups = reply[1]; // {groupId: [name, view status, last activity, {memberId: {name: name, status: status}}], ...}
+    groups = reply[1]; // {groupId: [name, view status, last activity, {memberId: {username: username, status: status}}], ...}
+
+    // Escape names
+    for (var i = 0; i < Object.keys(friends).length; i++) {
+        var friendId = Object.keys(friends)[i];
+        friends[friendId][0] = escapeHtml(friends[friendId][0]);
+    }
+    for (i = 0; i < Object.keys(groups).length; i++) {
+        var groupId = Object.keys(groups)[i];
+        groups[groupId][0] = escapeHtml(groups[groupId][0]);
+        for (var j = 0; j < Object.keys(groups[groupId][3]).length; j++) {
+            var memberId = Object.keys(groups[groupId][3])[j];
+            groups[groupId][3][memberId].username = escapeHtml(groups[groupId][3][memberId].username);
+        }
+    }
     chrome.storage.local.set({chats: reply});
     
     refreshChats(reply);
@@ -1617,11 +1631,9 @@ socket.on("searchUsersReply", function(reply) {
         return matchingUsers[b][2]-matchingUsers[a][2];
     });
 
-    console.log(JSON.stringify(reply, null, 2))
-
     for(var i = 0; i<sortedUsers.length; i++){
         var matchingUserId = sortedUsers[i];
-        var matchingUserName = matchingUsers[matchingUserId][0];
+        var matchingUserName = escapeHtml(matchingUsers[matchingUserId][0]);
         var matchingUserLastOnline = matchingUsers[matchingUserId][1];
         var usersElement = document.getElementById("matchingUsers");
         console.log((friends != undefined && matchingUserId in friends))
