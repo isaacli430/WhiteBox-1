@@ -13,6 +13,24 @@
 var socket = io.connect('https://www.jblrd.com', {path: "/V2.0.11/whitebox-websocket/socket.io"});
 //var socket = io.connect('https://www.jblrd.com', {path: "/V2/whitebox-websocket-development/socket.io"});
 
+var md = window.markdownit({linkify: true});
+// Make link open in new tab
+var defaultRender = md.renderer.rules.link_open || function(tokens, idx, options, env, self) {
+  return self.renderToken(tokens, idx, options);
+};
+md.renderer.rules.link_open = function (tokens, idx, options, env, self) {
+  var aIndex = tokens[idx].attrIndex('target');
+
+  if (aIndex < 0) {
+    tokens[idx].attrPush(['target', '_blank']);
+  } else {
+    tokens[idx].attrs[aIndex][1] = '_blank';
+  }
+
+  // pass token to default renderer.
+  return defaultRender(tokens, idx, options, env, self);
+};
+
 socket.on("connected", function() {
     login();
 });
@@ -1018,6 +1036,7 @@ function sendMessage(){
 
     message = unescape(encodeURIComponent(message));
 
+
     // add to messages
     messages.push({messageId: null, senderId: userId, message: message, timeSent: unixTime, confirmed: false});
     refreshMessagePage();
@@ -1232,7 +1251,7 @@ function refreshMessagePage() {
     var displayedNewMsgsDiv = false;
 
     for(var i=0; i<messages.length; i++){
-        var message = findLinks(escapeHtml(decodeURIComponent(escape(messages[i].message))));
+        var message = md.renderInline(decodeURIComponent(escape(messages[i].message)));
         var timeSent = messages[i].timeSent;
         var senderId = messages[i].senderId;
         var messageId = messages[i].messageId;
@@ -1636,7 +1655,6 @@ socket.on("searchUsersReply", function(reply) {
         var matchingUserName = escapeHtml(matchingUsers[matchingUserId][0]);
         var matchingUserLastOnline = matchingUsers[matchingUserId][1];
         var usersElement = document.getElementById("matchingUsers");
-        console.log((friends != undefined && matchingUserId in friends))
 
         if((friends != undefined && matchingUserId in friends) || matchingUserId == userId){
             continue; // Already friends
