@@ -13,7 +13,14 @@
 var socket = io.connect('https://www.jblrd.com', {path: "/V2.0.11/whitebox-websocket/socket.io"});
 //var socket = io.connect('https://www.jblrd.com', {path: "/V2/whitebox-websocket-development/socket.io"});
 
-var md = window.markdownit({linkify: true});
+var md = window.markdownit({linkify: true})
+    .use(window.markdownitHashtag, {
+              // pattern for hashtags with normal string escape rules
+              hashtagRegExp: '([^\\s]+)',
+              // pattern for allowed preceding content
+              preceding:     '^|\\s'
+            });
+
 // Make link open in new tab
 var defaultRender = md.renderer.rules.link_open || function(tokens, idx, options, env, self) {
   return self.renderToken(tokens, idx, options);
@@ -29,6 +36,12 @@ md.renderer.rules.link_open = function (tokens, idx, options, env, self) {
 
   // pass token to default renderer.
   return defaultRender(tokens, idx, options, env, self);
+};
+
+// Hashtag rules
+md.renderer.rules.hashtag_open  = function(tokens, idx) {
+  var tagName = tokens[idx].content.toLowerCase(); 
+  return '<a href="#">';
 };
 
 socket.on("connected", function() {
@@ -185,13 +198,6 @@ function getCookies(domain, name, callback) {
         }
     });
 }
-
-$("#message").keyup(function(event) {
-    event.preventDefault();
-    if (event.keyCode === 13) {
-        $("#sendButton").click();
-    }
-});
 
 function setLightTheme() {
     less.modifyVars({
@@ -405,20 +411,6 @@ $("#login-form").submit(function(event) {
 });
 
 function login() {
-    chrome.storage.sync.get(["randomKey", "whiteboxId", "whiteboxUsername"], function(result) {
-        if(("randomKey" in result) && result.randomKey != null){
-            hideEverything();
-            userInputElement.show();
-            aboutButtonElement.show();
-
-            $("#create-account-tab").tab('show');
-            $("#create-account-username").val(result.whiteboxUsername);
-            $("#create-account-username").attr("disabled", "disabled");
-
-            $("#alertMsg").html("<b>Please enter email and password - friends and chats will not be lost.</b> <br><br><small>Dont worry, i cant see your passwords, they salted, hashed and sent over a secure ssl encrypted connection <br>-JB</small>");
-            $("#alertModal").modal("show");
-        }
-    });
     chrome.storage.local.get(["whiteboxId", "whiteboxUsername", "validator"], function(result) {
         if(!("whiteboxUsername" in result) || !("whiteboxId" in result) || !("validator" in result) ||
            result.whiteboxId === null || result.whiteboxUsername === null || result.validator === null){
@@ -494,6 +486,10 @@ $("#create-account-form").submit(function(event) {
     if(createAccountUsername.length>maxUsernameLength){
         $("#create-account-username").val("");
         $("#create-account-username").attr("placeholder", "Username too long");
+    }
+    else if(!(/^[a-zA-Z0-9\-_.]+$/.test(createAccountUsername))){ // Does not match regex
+        $("#create-account-username").val("");
+        $("#create-account-username").attr("placeholder", "Illegal characters");
     }
     else if(createAccountUsername.length == 0){
         $("#create-account-username").val("");
@@ -679,10 +675,15 @@ function changeUsername(){
         document.getElementById("changeUsernameInput").value = "";
         document.getElementById("changeUsernameInput").placeholder="Username too long";
     }
+    else if(!(/^[a-zA-Z0-9\-_.]+$/.test(newUsername))){ // Does not match regex
+        document.getElementById("changeUsernameInput").value = "";
+        document.getElementById("changeUsernameInput").placeholder="Illegal characters";
+    }
     else if(newUsername) {
         socket.emit("changeUsername", {username: username, newUsername: newUsername});
         $("#confirmChangeUsernameModal").modal("hide");
         document.getElementById("changeUsernameInput").value = "";
+
     } 
     else {
         document.getElementById("changeUsernameInput").placeholder="Please enter username";
@@ -1048,6 +1049,84 @@ function sendMessage(){
     var chatType = clickedChat.type;
     socket.emit("message", {username: username, message: message, receiverId: receiverId, receiverName: receiverName, chatType: chatType});
 }
+
+$("#message").keydown(function(event) {
+    if (event.keyCode === 13) {
+        event.preventDefault();
+        if($("#message").autocomplete("widget")[0].style.display === "none") { // If autocomplete is not open
+            $("#sendButton").click();
+        }
+    }
+});
+
+function split( val ) {
+    return val.split(/@\s*/);
+}
+
+function splitLeave( val ) {
+    console.log(val);
+    var split = val.split("@");
+    console.log(split);
+    for (var i = 0; i < split.length; i++) {
+        split[i] += "@";
+    }
+    return split;
+}
+
+function extractLast( term ) {
+    return split(term).pop();
+}
+
+$("#message")
+    // don't navigate away from the field on tab when selecting an item
+    .on( "keydown", function( event ) {
+        if(event.keyCode === $.ui.keyCode.TAB && $(this).autocomplete("instance").menu.active){
+            event.preventDefault();
+        }
+    })
+    .autocomplete({
+        minLength: 0,
+        source: function(request, response) { 
+            // If is a group chat and @ is present either at beginning of text or has a space before it
+            // (so email@gmail.com doesnt trigger it)
+            console.log(clickedChat.type == 1 && (request.term.indexOf(" @") >= 0 || request.term.indexOf("@") == 0))
+            if(clickedChat.type == 1 && (request.term.indexOf(" @") >= 0 || request.term.indexOf("@") == 0)){
+                var groupMembers = groups[clickedChat.id][3];
+                var groupMembersUsernames = ["everyone"];
+                for (var i = 0; i < Object.keys(groupMembers).length; i++) {
+                    var memberId = Object.keys(groupMembers)[i];
+                    groupMembersUsernames.push(groupMembers[memberId].username);
+                }
+
+                response($.ui.autocomplete.filter(groupMembersUsernames, extractLast(request.term)).slice(0,5));
+            }
+            else{
+                $("#message").autocomplete("close");
+            }
+        },
+        focus: function() {
+            return false;
+        },
+        select: function(event, ui) {
+            console.log(this.value);
+            var terms = splitLeave(this.value);
+            // remove the current input
+            console.log(terms);
+            terms.pop();
+            // add the selected item
+            ui.item.value = ui.item.value + " ";   
+            terms.push(ui.item.value);
+            // add placeholder to get the comma-and-space at the end
+            terms.push("");
+            this.value = terms.join("");
+            return false;
+        },
+        position: {
+            my: "left bottom", 
+            at: "left top", 
+            collision: "flip"
+        }
+    });
 
 function friendRequest(requesteeId){
     $("#matchingUsers [data-matchinguserid = \""+requesteeId+"\"]").attr("class", "fas fa-check fa-fw");
