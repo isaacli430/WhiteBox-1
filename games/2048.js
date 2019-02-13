@@ -139,10 +139,10 @@ function keyPress(event){
 	if(moving){};
 	if(creatingNewTile){};
 
-    const LEFT_KEY = 37;
-    const RIGHT_KEY = 39;
-    const UP_KEY = 38;
-    const DOWN_KEY = 40;
+    var LEFT_KEY = 37;
+    var RIGHT_KEY = 39;
+    var UP_KEY = 38;
+    var DOWN_KEY = 40;
 	var keyPressed = event.keyCode;
 	var previousNumbers = JSON.stringify(numbers);
     moves = [];

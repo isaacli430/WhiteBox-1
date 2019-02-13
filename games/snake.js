@@ -11,19 +11,19 @@ var theme6 = "#3B97E0";
 
 var snakeInterval = false;
 
-const GAME_SPEED = 100;
-const BLOCK_SIZE = 14;
-const ADD_LENGTH = 4;
+var GAME_SPEED = 100;
+var BLOCK_SIZE = 14;
+var ADD_LENGTH = 4;
 
 var snake;
 
-let score = 0;
-let changingDirection = false;
-let ateFoodTickLeft = 0;
-let foodX;
-let foodY;
-let dx = BLOCK_SIZE;
-let dy = 0;
+var score = 0;
+var changingDirection = false;
+var ateFoodTickLeft = 0;
+var foodX;
+var foodY;
+var dx = BLOCK_SIZE;
+var dy = 0;
 
 var gameCanvas = document.getElementById("snakeCanvas");
 var ctx = gameCanvas.getContext("2d");
@@ -226,7 +226,7 @@ function drawFood() {
  */
 function advanceSnake() {
     // Create the new Snake's head
-    const head = {x: snake[0].x + dx, y: snake[0].y + dy};
+    var head = {x: snake[0].x + dx, y: snake[0].y + dy};
     // Add the new head to the beginning of snake body
     snake.unshift(head);
 
@@ -245,7 +245,7 @@ function advanceSnake() {
         }
     }
 
-    const didEatFood = snake[0].x === foodX && snake[0].y === foodY;
+    var didEatFood = snake[0].x === foodX && snake[0].y === foodY;
     if (didEatFood) {
         // Increase score
         score += 1;
@@ -265,7 +265,7 @@ function advanceSnake() {
  * or any of the walls
  */
 function didGameEnd() {
-    for (let i = 4; i < snake.length; i++) {
+    for (var i = 4; i < snake.length; i++) {
         if (snake[i].x === snake[0].x && snake[i].y === snake[0].y) return true
     }
     return false
@@ -289,7 +289,7 @@ function createFood() {
     foodY = randomTen(0, gameCanvas.height - BLOCK_SIZE);
     // if the new food location is where the snake currently is, generate a new food location
     snake.forEach(function isFoodOnSnake(part) {
-        const foodIsoNsnake = part.x == foodX && part.y == foodY;
+        var foodIsoNsnake = part.x == foodX && part.y == foodY;
         if (foodIsoNsnake) createFood();
     });
 }
@@ -325,10 +325,10 @@ function drawSnakePart(snakePart) {
  * @param { object } event - The keydown event
  */
 function changeDirection(event) {
-    const LEFT_KEY = 37;
-    const RIGHT_KEY = 39;
-    const UP_KEY = 38;
-    const DOWN_KEY = 40;
+    var LEFT_KEY = 37;
+    var RIGHT_KEY = 39;
+    var UP_KEY = 38;
+    var DOWN_KEY = 40;
     /**
      * Prevent the snake from reversing
      * Example scenario:
@@ -338,11 +338,11 @@ function changeDirection(event) {
     if (changingDirection) return;
     changingDirection = true;
     
-    const keyPressed = event.keyCode;
-    const goingUp = dy === -BLOCK_SIZE;
-    const goingDown = dy === BLOCK_SIZE;
-    const goingRight = dx === BLOCK_SIZE;
-    const goingLeft = dx === -BLOCK_SIZE;
+    var keyPressed = event.keyCode;
+    var goingUp = dy === -BLOCK_SIZE;
+    var goingDown = dy === BLOCK_SIZE;
+    var goingRight = dx === BLOCK_SIZE;
+    var goingLeft = dx === -BLOCK_SIZE;
     if (keyPressed === LEFT_KEY && !goingRight) {
         dx = -BLOCK_SIZE;
         dy = 0;

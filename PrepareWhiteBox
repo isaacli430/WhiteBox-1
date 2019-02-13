@@ -5,7 +5,7 @@ cp -r ~/Documents/WhiteBox/WhiteBox ~/Documents/WhiteBoxProduction
 rm -rf ~/Documents/WhiteBoxProduction/games/
 rm ~/Documents/WhiteBoxProduction/main.js
 rm ~/Documents/WhiteBoxProduction/PrepareWhiteBox
-uglifyjs-folder ~/Documents/WhiteBox/WhiteBox/ -yo ~/Documents/WhiteBoxProduction/whitebox.min.js -p "**/main.js,**/games/*.js"
+uglifyjs-folder ~/Documents/WhiteBox/WhiteBox/ -o ~/Documents/WhiteBoxProduction/whitebox.min.js -p "**/main.js,**/games/*.js"
 sed '/<!-- Development Files Start -->/,/<!-- Development Files End -->/d' ~/Documents/WhiteBox/WhiteBox/main.html > ~/Documents/WhiteBoxProduction/main.html
 echo "//  __        ___     _ _       ____            
 //  \ \      / / |__ (_) |_ ___| __ )  _____  __

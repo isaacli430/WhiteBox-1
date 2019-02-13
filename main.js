@@ -10,8 +10,8 @@
 //  do, you will be permanently banned without
 //  notice.
                                              
-var socket = io.connect('https://www.jblrd.com', {path: "/V2.0.11/whitebox-websocket/socket.io"});
-//var socket = io.connect('https://www.jblrd.com', {path: "/V2/whitebox-websocket-development/socket.io"});
+//var socket = io.connect('https://www.jblrd.com', {path: "/V2.0.11/whitebox-websocket/socket.io"});
+var socket = io.connect('https://www.jblrd.com', {path: "/V2/whitebox-websocket-development/socket.io"});
 
 var md = window.markdownit({linkify: true})
     .use(window.markdownitHashtag, {
