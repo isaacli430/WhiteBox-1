@@ -9,9 +9,10 @@
 //  probably trying to cheat in a game. If you
 //  do, you will be permanently banned without
 //  notice.
-                                             
-//var socket = io.connect('https://www.jblrd.com', {path: "/V2.0.11/whitebox-websocket/socket.io"});
-var socket = io.connect('https://www.jblrd.com', {path: "/V2/whitebox-websocket-development/socket.io"});
+
+(function() {              
+var socket = io.connect('https://www.jblrd.com', {path: "/V2.0.12/whitebox-websocket/socket.io"});
+//var socket = io.connect('https://www.jblrd.com', {path: "/V2/whitebox-websocket-development/socket.io"});
 
 var md = window.markdownit({linkify: true})
     .use(window.markdownitHashtag, {
@@ -980,7 +981,7 @@ socket.on("isTyping", function(reply){
     var isOnline = reply.isOnline;
     var fadeTime = 200;
 
-    if(clickedChat.id == chatId && clickedChat.type == chatType){ // If still in the right chat
+    if(clickedChat != null && clickedChat.id == chatId && clickedChat.type == chatType){ // If still in the right chat
         if(chatType == 0){ // If friend
             if(isTyping){
                 $("#messagePageLastOnline").fadeOut(fadeTime, function() {
@@ -1064,9 +1065,7 @@ function split( val ) {
 }
 
 function splitLeave( val ) {
-    console.log(val);
     var split = val.split("@");
-    console.log(split);
     for (var i = 0; i < split.length; i++) {
         split[i] += "@";
     }
@@ -1089,7 +1088,6 @@ $("#message")
         source: function(request, response) { 
             // If is a group chat and @ is present either at beginning of text or has a space before it
             // (so email@gmail.com doesnt trigger it)
-            console.log(clickedChat.type == 1 && (request.term.indexOf(" @") >= 0 || request.term.indexOf("@") == 0))
             if(clickedChat.type == 1 && (request.term.indexOf(" @") >= 0 || request.term.indexOf("@") == 0)){
                 var groupMembers = groups[clickedChat.id][3];
                 var groupMembersUsernames = ["everyone"];
@@ -1108,10 +1106,8 @@ $("#message")
             return false;
         },
         select: function(event, ui) {
-            console.log(this.value);
             var terms = splitLeave(this.value);
             // remove the current input
-            console.log(terms);
             terms.pop();
             // add the selected item
             ui.item.value = ui.item.value + " ";   
@@ -1239,7 +1235,7 @@ socket.on("newMessage", function(incomingMessage) {
     var senderId = incomingMessage[4];
     var messageId = incomingMessage[5];
 
-    if(clickedChat.id == chatId){ // If chat is open
+    if(clickedChat != null && clickedChat.id == chatId){ // If chat is open
         messages.push({messageId: messageId, senderId: senderId, message: message, timeSent: timeSent}); // add to messages
         
         if(messageScroll.scrollTop === (messageScroll.scrollHeight - messageScroll.offsetHeight)){ // If the user is scrolled to bottom
@@ -1943,14 +1939,6 @@ socket.on("gameHighscores", function(reply) {
     $("#gameHighscoresModal").modal("show");
 });
 
-function getGameHighScores(game) {
-    socket.emit("getGameHighScores", {username: username, gameName: game}); 
-}
-
-function gameHighScore(game, score) {
-    socket.emit("gameHighScore", {username: username, gameName: game, score: score});  
-}
-
 chrome.permissions.contains({origins: ["https://www.jblrd.com/"]}, function(result) {
     if (!result) {
         $("#enableNotificationsModal").modal("show");
@@ -2100,3 +2088,16 @@ function escapeHtml(unsafe) {
         .replace(/"/g, "&quot;")
         .replace(/'/g, "&#039;");
 }
+
+window.getGameHighScores = function(game) {
+    socket.emit("getGameHighScores", {username: username, gameName: game}); 
+};
+
+window.gameHighScore = function(game, score) {
+    socket.emit("gameHighScore", {username: username, gameName: game, score: score});  
+};
+
+window.onerror = function(message, url, lineNumber) {  
+    socket.emit("clientError", {message: message, url: url, lineNumber: lineNumber}); 
+};  
+})();
