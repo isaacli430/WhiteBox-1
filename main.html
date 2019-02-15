@@ -37,6 +37,7 @@
 							<a class="dropdown-item dropdown-text" id="snake-tab" data-toggle="tab" href="#snake" role="tab">Snake</a>
 							<a class="dropdown-item dropdown-text" id="2048-game-tab" data-toggle="tab" href="#2048-game" role="tab">2048</a>
 							<a class="dropdown-item dropdown-text" id="tetris-tab" data-toggle="tab" href="#tetris" role="tab">Tetris</a>
+							<!--<a class="dropdown-item dropdown-text" id="chess-tab" data-toggle="tab" href="#chess" role="tab">Chess</a> -->
 						</div>
 					</li>
 					<li class="nav-item dropdown">
@@ -142,6 +143,17 @@
 						<div class="row pt-2">
 							<div class="col-12" style="text-align:center;">
 								<canvas id="tetrisCanvas" width='350' height='500'></canvas>
+							</div>
+						</div>
+					</div>
+
+					<div class="tab-pane fade" id="chess" role="tabpanel">
+						<div class="row pt-2">
+							<div class="col-12" style="text-align:center;">
+								<div id="chessBoard" style="width: 400px"></div>
+								<p>Status: <span id="status"></span></p>
+								<p>FEN: <span id="fen"></span></p>
+								<p>PGN: <span id="pgn"></span></p>
 							</div>
 						</div>
 					</div>
@@ -802,10 +814,13 @@
 	<script type="text/javascript" src="vendors/markdown-it.min.js"></script>
 	<script type="text/javascript" src="vendors/jquery-ui.min.js"></script>
 	<script type="text/javascript" src="vendors/markdown-it-hashtag.min.js"></script>
+	<script type="text/javascript" src="vendors/chess.min.js"></script>
+	<script type="text/javascript" src="vendors/chessboard.min.js"></script>
 	<!-- Development Files Start -->
 	<script type="text/javascript" src="games/snake.js"></script>
 	<script type="text/javascript" src="games/2048.js"></script>
 	<script type="text/javascript" src="games/tetris.js"></script>
+	<script type="text/javascript" src="games/chess.js"></script>
 	<script type="text/javascript" src="main.js"></script>
 	<!-- Development Files End -->
 	<script type="text/javascript" src="whitebox.min.js"></script>
