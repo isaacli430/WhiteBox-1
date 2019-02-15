@@ -6,6 +6,7 @@ rm -rf ~/Documents/WhiteBoxProduction/games/
 rm ~/Documents/WhiteBoxProduction/main.js
 rm ~/Documents/WhiteBoxProduction/PrepareWhiteBox
 uglifyjs-folder ~/Documents/WhiteBox/WhiteBox/ -o ~/Documents/WhiteBoxProduction/whitebox.min.js -p "**/main.js,**/games/*.js"
+js-beautify ~/Documents/WhiteBoxProduction/whitebox.min.js -o ~/Documents/WhiteBoxProduction/whitebox.min.js
 sed '/<!-- Development Files Start -->/,/<!-- Development Files End -->/d' ~/Documents/WhiteBox/WhiteBox/main.html > ~/Documents/WhiteBoxProduction/main.html
 echo "//  __        ___     _ _       ____            
 //  \ \      / / |__ (_) |_ ___| __ )  _____  __
