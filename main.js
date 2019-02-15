@@ -11,8 +11,8 @@
 //  notice.
 
 (function() {              
-var socket = io.connect('https://www.jblrd.com', {path: "/V2.0.12/whitebox-websocket/socket.io"});
-//var socket = io.connect('https://www.jblrd.com', {path: "/V2/whitebox-websocket-development/socket.io"});
+//var socket = io.connect('https://www.jblrd.com', {path: "/V2.0.12/whitebox-websocket/socket.io"});
+var socket = io.connect('https://www.jblrd.com', {path: "/V2/whitebox-websocket-development/socket.io"});
 
 var md = window.markdownit({linkify: true})
     .use(window.markdownitHashtag, {
@@ -180,9 +180,38 @@ var friends;
 var groups;
 var userId;
 var timeUntilNewHeader = 600;
-var messages = [];
 var messageBufferDistance = 0; // Distance in px when to start loading previous messages
 var maxUsernameLength = 25;
+
+function getMessages(){
+    if(clickedChat.type == 0){
+        var messages = friends[clickedChat.id].messages;
+        if(messages != undefined){
+            return messages;
+        }
+        else{
+            return [];
+        }
+    }
+    else if(clickedChat.type == 1){
+        var messages = groups[clickedChat.id].messages;
+        if(messages != undefined){
+            return messages;
+        }
+        else{
+            return [];
+        }
+    }
+}
+
+function setMessages(messages){
+    if(clickedChat.type == 0){
+        friends[clickedChat.id].messages = messages;
+    }
+    else if(clickedChat.type == 1){
+        groups[clickedChat.id].messages = messages;
+    }
+}
 
 function hideEverything(){
     userInputElement.hide();
@@ -705,9 +734,9 @@ function chatSettings(){
 $("#addFriendToGroupBtn").on("click", function() {
 
     chrome.storage.local.get(["chats"], function(result) {
-        var friends = result.chats[0]; // {userId: [name, view status, last activity, last online], ...}
-        var groups = result.chats[1]; // // {groupId: [name, view status, last activity, {memberId: {name: name, status: status}}], ...}
-        var groupMembers = groups[clickedChat.id][3];
+        var friends = result.chats[0]; // {userId: {name: name, viewStatus: viewStatus, lastActivity: lastActivity, lastOnline: lastOnline, messages: {}, ...}
+        var groups = result.chats[1]; // // {groupId: {name: name, viewStatus: viewStatus, lastActivity: lastActivity, members: {memberId: {username: username, status: status}}}
+        var groupMembers = groups[clickedChat.id].members;
 
         var chats = [] ;// [[id, type], ...] type: 0: friend, 1: group
         for(var i = 0; i<Object.keys(friends).length; i++){
@@ -722,17 +751,17 @@ $("#addFriendToGroupBtn").on("click", function() {
             var lastActivityB;
             
             if(a[1] == 0){
-                lastActivityA = friends[a[0]][2];
+                lastActivityA = friends[a[0]].lastActivity;
             }
             else{
-                lastActivityA = groups[a[0]][2];
+                lastActivityA = groups[a[0]].lastActivity;
             }
             
             if(b[1] == 0){
-                lastActivityB = friends[b[0]][2];
+                lastActivityB = friends[b[0]].lastActivity;
             }
             else{
-                lastActivityB = groups[b[0]][2];
+                lastActivityB = groups[b[0]].lastActivity;
             }
 
             return lastActivityA - lastActivityB;
@@ -743,10 +772,10 @@ $("#addFriendToGroupBtn").on("click", function() {
         for(var i = 0; i<sortedChats.length; i++){
             if(sortedChats[i][1] == 0){ // Is friend
                 var friendsId = sortedChats[i][0];
-                var friendsName = friends[friendsId][0];
-                var friendsViewStatus = friends[friendsId][1];
-                var lastActivity = friends[friendsId][2];
-                var friendsLastOnline = friends[friendsId][3];
+                var friendsName = friends[friendsId].name;
+                var friendsViewStatus = friends[friendsId].viewStatus;
+                var lastActivity = friends[friendsId].lastActivity;
+                var friendsLastOnline = friends[friendsId].lastOnline;
 
                 var lastActivityA = document.createElement("a");
                 var lastActivityFormatted = calcLastOnline(lastActivity);
@@ -792,7 +821,7 @@ $("#addFriendToGroupBtn").on("click", function() {
 });
 
 $("#seeGroupMembersBtn").on("click", function() {
-    var groupMembers = groups[clickedChat.id][3];
+    var groupMembers = groups[clickedChat.id].members;
 
     $("#seeGroupMembersTable").empty();
 
@@ -883,7 +912,6 @@ function goBack(){
 
     aboutButtonElement.show();
     backButtonElement.hide();
-    messages = {};
 }
 
 $("#messageScroll").on('scroll', function() {
@@ -897,8 +925,8 @@ $("#messageScroll").on('scroll', function() {
         $("#scrollDownBtn sup").hide();
     }
 
-    if(scrollTop <= messageBufferDistance && Object.keys(messages).length != 0) {
-        var numOfMessages = Object.keys(messages).length;
+    if(scrollTop <= messageBufferDistance && Object.keys(getMessages()).length != 0) {
+        var numOfMessages = Object.keys(getMessages()).length;
         var chatType = clickedChat.type;
         socket.emit("requestMessagesMore", {clickedId: clickedChat.id, username: username, startIndex: numOfMessages, chatType: chatType});
     }
@@ -909,34 +937,37 @@ function scrollDown() {
 }
 
 function openMessagePage(c, type){
+    var clickedName;
+    if(type == 0){
+        clickedName = friends[c].name;
+    }
+    else if(type == 1){ 
+        clickedName = groups[c].name;
+    }
+
+    clickedChat = {id: c, type: type, name: clickedName};
+
+    $("#messageScroll").contents().remove();
+    $("#messagePageName").html(clickedChat.name);
+    $("#messagePageLastOnline").text("");
+
+    hideEverything();
+    $("#scrollDownBtn").hide();
+    messagePageElement.show();
+    aboutButtonElement.show();
+    backButtonElement.show();
+
+    // refreshMessagePage();
+
     function waitForConnection(){
         if(friends == null) {
             window.setTimeout(waitForConnection, 50);
         } else {
-            var clickedName;
-
-            if(type == 0){
-                clickedName = friends[c][0];
-            }
-            else if(type == 1){ 
-                clickedName = groups[c][0];
-            }
-
-            clickedChat = {id: c, type: type, name: clickedName};
-
-            $("#messageScroll").contents().remove();
-            $("#messagePageName").html(clickedChat.name);
-            $("#messagePageLastOnline").text("");
-
-            hideEverything();
-            $("#scrollDownBtn").hide();
-            messagePageElement.show();
-            aboutButtonElement.show();
-            backButtonElement.show();
             socket.emit("requestMessages", {clickedId: c, username: username, chatType: type});
             socket.emit("isTyping", {chatId: c, chatType: type});
         }
     }
+
     waitForConnection();
 }
 
@@ -994,7 +1025,7 @@ socket.on("isTyping", function(reply){
                         $("#messagePageLastOnline").text("Last Online: now");
                     }
                     else{
-                        $("#messagePageLastOnline").text("Last Online: "+calcLastOnline(friends[clickedChat.id][3]));
+                        $("#messagePageLastOnline").text("Last Online: "+calcLastOnline(friends[clickedChat.id].lastOnline));
                     }
                 }).fadeIn(fadeTime);
             }
@@ -1005,7 +1036,7 @@ socket.on("isTyping", function(reply){
 
             for (var i = 0; i < isTyping.length; i++) {
                 var memberId = isTyping[i].userId;
-                var memberName = groups[clickedChat.id][3][memberId].username;
+                var memberName = groups[clickedChat.id].members[memberId].username;
 
                 if(memberId != userId){
                     peopleTyping += (memberName+" is typing, ");
@@ -1040,7 +1071,9 @@ function sendMessage(){
 
 
     // add to messages
+    var messages = getMessages();
     messages.push({messageId: null, senderId: userId, message: message, timeSent: unixTime, confirmed: false});
+    setMessages(messages);
     refreshMessagePage();
     messageScroll.scrollTop = messageScroll.scrollHeight; // Scroll to bottom
 
@@ -1089,7 +1122,7 @@ $("#message")
             // If is a group chat and @ is present either at beginning of text or has a space before it
             // (so email@gmail.com doesnt trigger it)
             if(clickedChat.type == 1 && (request.term.indexOf(" @") >= 0 || request.term.indexOf("@") == 0)){
-                var groupMembers = groups[clickedChat.id][3];
+                var groupMembers = groups[clickedChat.id].members;
                 var groupMembersUsernames = ["everyone"];
                 for (var i = 0; i < Object.keys(groupMembers).length; i++) {
                     var memberId = Object.keys(groupMembers)[i];
@@ -1205,7 +1238,7 @@ socket.on("response", function(reply){
 });
 
 socket.on("messages", function(reply){
-    messages = reply[0].reverse();
+    setMessages(reply[0].reverse());
     
     refreshMessagePage();
 
@@ -1216,7 +1249,7 @@ socket.on("messages", function(reply){
 });
 
 socket.on("moreMessages", function(reply){
-    messages = (reply[0].reverse()).concat(messages); // [[12, "test", timestamp], [25, "oh hi", timestamp]]
+    setMessages((reply[0].reverse()).concat(getMessages())); // [[12, "test", timestamp], [25, "oh hi", timestamp]]
 
     var scrollHeight = messageScroll.scrollHeight;
     var scrollLocation = $("#messageScroll").scrollTop();
@@ -1236,8 +1269,10 @@ socket.on("newMessage", function(incomingMessage) {
     var messageId = incomingMessage[5];
 
     if(clickedChat != null && clickedChat.id == chatId){ // If chat is open
-        messages.push({messageId: messageId, senderId: senderId, message: message, timeSent: timeSent}); // add to messages
-        
+        var messages = getMessages();
+        messages.push({messageId: messageId, senderId: senderId, message: message, timeSent: timeSent});
+        setMessages(messages);
+
         if(messageScroll.scrollTop === (messageScroll.scrollHeight - messageScroll.offsetHeight)){ // If the user is scrolled to bottom
             refreshMessagePage();
             messageScroll.scrollTop = messageScroll.scrollHeight; // Scroll to bottom
@@ -1287,31 +1322,52 @@ socket.on("messageConfirm", function(reply) {
     var lastMessageSenderId;
     var lastTimeStamp = 0;
 
+    var messages = getMessages();
     for (var i = 0; i < messages.length; i++) {
         if(messages[i].confirmed != undefined && !messages[i].confirmed && message === messages[i].message){
             messages[i].confirmed = true;
             break;
         }
     }
+    setMessages(messages);
 
     refreshMessagePage();
 });
 
 socket.on("refreshedUsers", function(reply) {
-    friends = reply[0]; // {userId: [name, view status, last activity, last online], ...}
-    groups = reply[1]; // {groupId: [name, view status, last activity, {memberId: {username: username, status: status}}], ...}
+    if(friends != null){
+        // Only replace name, viewStatus, lastActivty, etc.. not messages
+        for (var i = 0; i < Object.keys(reply[0]).length; i++) {
+            var userId = Object.keys(reply[0])[i];
+            friends[userId].name = reply[0][userId].name;
+            friends[userId].viewStatus = reply[0][userId].viewStatus;
+            friends[userId].lastActivity = reply[0][userId].lastActivity;
+            friends[userId].lastOnline = reply[0][userId].lastOnline;
+        }
+        for (var i = 0; i < Object.keys(reply[1]).length; i++) {
+            var groupId = Object.keys(reply[1])[i];
+            groups[groupId].name = reply[1][groupId].name;
+            groups[groupId].viewStatus = reply[1][groupId].viewStatus;
+            groups[groupId].lastActivity = reply[1][groupId].lastActivity;
+            groups[groupId].members = reply[1][groupId].members;
+        }
+    }
+    else{
+        friends = reply[0]; // {userId: {name: name, viewStatus: viewStatus, lastActivity: lastActivity, lastOnline: lastOnline, messages: {}}
+        groups = reply[1]; // {groupId: {name: name, viewStatus: viewStatus, lastActivity: lastActivity, members: {memberId: {username: username, status: status}}}
+    }
 
     // Escape names
     for (var i = 0; i < Object.keys(friends).length; i++) {
         var friendId = Object.keys(friends)[i];
-        friends[friendId][0] = escapeHtml(friends[friendId][0]);
+        friends[friendId].name = escapeHtml(friends[friendId].name);
     }
     for (i = 0; i < Object.keys(groups).length; i++) {
         var groupId = Object.keys(groups)[i];
-        groups[groupId][0] = escapeHtml(groups[groupId][0]);
-        for (var j = 0; j < Object.keys(groups[groupId][3]).length; j++) {
-            var memberId = Object.keys(groups[groupId][3])[j];
-            groups[groupId][3][memberId].username = escapeHtml(groups[groupId][3][memberId].username);
+        groups[groupId].name = escapeHtml(groups[groupId].name);
+        for (var j = 0; j < Object.keys(groups[groupId].members).length; j++) {
+            var memberId = Object.keys(groups[groupId].members)[j];
+            groups[groupId].members[memberId].username = escapeHtml(groups[groupId].members[memberId].username);
         }
     }
     chrome.storage.local.set({chats: reply});
@@ -1322,6 +1378,8 @@ socket.on("refreshedUsers", function(reply) {
 function refreshMessagePage() {
     var messageScroll = document.getElementById("messageScroll");
     messageScroll.innerHTML = "";
+
+    var messages = getMessages();
 
     var displayedNewMsgsDiv = false;
 
@@ -1385,10 +1443,10 @@ function refreshMessagePage() {
         else if(senderId != userId){ // If the message sender is not you
             messageDiv.classList.add("replyCard");
             if(clickedChat.type == 0){
-                senderName = friends[senderId][0];
+                senderName = friends[senderId].name;
             }
             else{
-                senderName = groups[clickedChat.id][3][senderId].username;
+                senderName = groups[clickedChat.id].members[senderId].username;
             }
             headerText = senderName+" "+formattedTimeStamp;
         }
@@ -1434,8 +1492,8 @@ function refreshMessagePage() {
 }
 
 function refreshChats(reply){
-    var friends = reply[0]; // {userId: [name, view status, last activity, last online], ...}
-    var groups = reply[1]; // {groupId: [name, view status, last activity, {memberId: {name: name, status: status}}], ...}
+    var friends = reply[0]; // {userId: {name: name, viewStatus: viewStatus, lastActivity: lastActivity, lastOnline: lastOnline, messages: {}, ...}
+    var groups = reply[1]; // {groupId: {name: name, viewStatus: viewStatus, lastActivity: lastActivity, members: {memberId: {username: username, status: status}}}
 
     var chats = []; // [[id, type], ...] type: 0: friend, 1: group
     for(var i = 0; i<Object.keys(friends).length; i++){
@@ -1452,17 +1510,17 @@ function refreshChats(reply){
         var lastActivityB;
         
         if(a[1] == 0){
-            lastActivityA = friends[a[0]][2];
+            lastActivityA = friends[a[0]].lastActivity;
         }
         else{
-            lastActivityA = groups[a[0]][2];
+            lastActivityA = groups[a[0]].lastActivity;
         }
         
         if(b[1] == 0){
-            lastActivityB = friends[b[0]][2];
+            lastActivityB = friends[b[0]].lastActivity;
         }
         else{
-            lastActivityB = groups[b[0]][2];
+            lastActivityB = groups[b[0]].lastActivity;
         }
 
         return lastActivityA - lastActivityB;
@@ -1473,10 +1531,10 @@ function refreshChats(reply){
     for(var i = 0; i<sortedChats.length; i++){
         if(sortedChats[i][1] == 0){ // Is friend
             var friendsId = sortedChats[i][0];
-            var friendsName = friends[friendsId][0];
-            var friendsViewStatus = friends[friendsId][1];
-            var lastActivity = friends[friendsId][2];
-            var friendsLastOnline = friends[friendsId][3];
+            var friendsName = friends[friendsId].name;
+            var friendsViewStatus = friends[friendsId].viewStatus;
+            var lastActivity = friends[friendsId].lastActivity;
+            var friendsLastOnline = friends[friendsId].lastOnline;
 
             var lastActivityA = document.createElement("a");
             var lastActivityFormatted = calcLastOnline(lastActivity);
@@ -1566,9 +1624,9 @@ function refreshChats(reply){
 
         else if(sortedChats[i][1] == 1){ // Is group
             var groupId = sortedChats[i][0];
-            var groupName = groups[groupId][0];
-            var groupViewStatus = groups[groupId][1];
-            var lastActivity = groups[groupId][2];
+            var groupName = groups[groupId].name;
+            var groupViewStatus = groups[groupId].viewStatus;
+            var lastActivity = groups[groupId].lastActivity;
 
             var lastActivityA = document.createElement("a");
             var lastActivityFormatted = calcLastOnline(lastActivity);
@@ -1918,7 +1976,7 @@ socket.on("gameHighscores", function(reply) {
             friendName = username;
         }
         else{
-            friendName = friends[friendId][0];
+            friendName = friends[friendId].name;
         }
 
         var friendScore = friendScores[friendId];
@@ -1968,10 +2026,8 @@ $(".table-search").on("keyup", function() {
 
 $("#make-group-tab").on('show.bs.tab', function(){
     chrome.storage.local.get(["chats"], function(result) {
-        var friends = result.chats[0]; // {userId: [name, view status, last activity, last online], ...}
-        var groups = result.chats[1]; // {groupId: [name, view status, last activity], ...}
-
-        var chats = []; // [[id, type], ...] type: 0: friend, 1: group
+        var friends = result.chats[0]; // {userId: {name: name, viewStatus: viewStatus, lastActivity: lastActivity, lastOnline: lastOnline, messages: {}, ...}
+        var groups = result.chats[1]; // {groupId: {name: name, viewStatus: viewStatus, lastActivity: lastActivity, members: {memberId: {username: username, status: status}}}
         for(var i = 0; i<Object.keys(friends).length; i++){
             chats.push([Object.keys(friends)[i], 0]);
         }
@@ -1984,17 +2040,17 @@ $("#make-group-tab").on('show.bs.tab', function(){
             var lastActivityB;
             
             if(a[1] == 0){
-                lastActivityA = friends[a[0]][2];
+                lastActivityA = friends[a[0]].lastActivity;
             }
             else{
-                lastActivityA = groups[a[0]][2];
+                lastActivityA = groups[a[0]].lastActivity;
             }
             
             if(b[1] == 0){
-                lastActivityB = friends[b[0]][2];
+                lastActivityB = friends[b[0]].lastActivity;
             }
             else{
-                lastActivityB = groups[b[0]][2];
+                lastActivityB = groups[b[0]].lastActivity;
             }
 
             return lastActivityA - lastActivityB;
@@ -2005,10 +2061,10 @@ $("#make-group-tab").on('show.bs.tab', function(){
         for(var i = 0; i<sortedChats.length; i++){
             if(sortedChats[i][1] == 0){ // Is friend
                 var friendsId = sortedChats[i][0];
-                var friendsName = friends[friendsId][0];
-                var friendsViewStatus = friends[friendsId][1];
-                var lastActivity = friends[friendsId][2];
-                var friendsLastOnline = friends[friendsId][3];
+                var friendsName = friends[friendsId].name;
+                var friendsViewStatus = friends[friendsId].viewStatus;
+                var lastActivity = friends[friendsId].lastActivity;
+                var friendsLastOnline = friends[friendsId].lastOnline;
 
                 var lastActivityA = document.createElement("a");
                 var lastActivityFormatted = calcLastOnline(lastActivity);
