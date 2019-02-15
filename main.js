@@ -854,7 +854,7 @@ $("#seeGroupMembersBtn").on("click", function() {
 });
 
 $("#leaveGroupBtn").on("click", function() {
-    socket.emit("removeMemberFromGroup", {username: username, groupId: clickedChat.id, memberId: memberId, memberName: memberName});
+    socket.emit("removeMemberFromGroup", {username: username, groupId: clickedChat.id, memberId: userId, memberName: username});
     socket.emit("refreshUsers", {username: username});
     $("#groupSettingsModal").modal("hide");
     goBack();
