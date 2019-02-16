@@ -97,65 +97,71 @@ var canHoldShape = true;
 var renderInterval = 30
 var tickInterval = 1000;
 
-window.openTetrisTab = function(){
-    chrome.storage.local.get(["theme"], function(result) {
-        if(result["theme"] === "light"){
-            theme1 = "#FFFFFF";
-            theme2 = "#000000";
-            theme3 = "#495057";
-            theme4 = "#CED4DA";
-            theme5 = "#CED4DA";
-            theme6 = "#3B97E0";
-        }
-        else if(result["theme"] === "dark"){
-            theme1 = "#36393F";
-            theme2 = "#DCDDDE";
-            theme3 = "#72767E";
-            theme4 = "#303136";
-            theme5 = "#303136";
-            theme6 = "#3B97E0";
-        }
-        else if(result["theme"] != null){
-            var shortThemeName = result["theme"];
-            chrome.storage.local.get(["customThemes"], function(result) {
-                var themeName = shortThemeName+"-customTheme";
+// On games tab close
+$('#games-tab').on('hide.bs.tab', function (e) {
+    clearAllIntervals();
+    document.removeEventListener("keydown", keydownFunction);
+    document.removeEventListener("keydown", restartTetris);
+});
 
-                theme1 = result["customThemes"][themeName]["theme1"];
-                theme2 = result["customThemes"][themeName]["theme2"];
-                theme3 = result["customThemes"][themeName]["theme3"];
-                theme4 = result["customThemes"][themeName]["theme4"];
-                theme5 = result["customThemes"][themeName]["theme5"];
-                theme6 = result["customThemes"][themeName]["theme6"];
-            });
-        }
-        chrome.storage.local.get(["tetrisGameBoard"], function(result) {
-            if(Object.keys(result).length != 0 && Object.keys(result.tetrisGameBoard).length != 0){
-                board = result.tetrisGameBoard.board;
-                score = result.tetrisGameBoard.score;
-                currentX = result.tetrisGameBoard.currentX;
-                currentY = result.tetrisGameBoard.currentY;
-                current = result.tetrisGameBoard.current;
-                heldShapeId = result.tetrisGameBoard.heldShapeId;
-                currentId = result.tetrisGameBoard.currentId;
-                canHoldShape = result.tetrisGameBoard.canHoldShape;
+// On game start
+chrome.storage.local.get(["theme"], function(result) {
+    if(result["theme"] === "light"){
+        theme1 = "#FFFFFF";
+        theme2 = "#000000";
+        theme3 = "#495057";
+        theme4 = "#CED4DA";
+        theme5 = "#CED4DA";
+        theme6 = "#3B97E0";
+    }
+    else if(result["theme"] === "dark"){
+        theme1 = "#36393F";
+        theme2 = "#DCDDDE";
+        theme3 = "#72767E";
+        theme4 = "#303136";
+        theme5 = "#303136";
+        theme6 = "#3B97E0";
+    }
+    else if(result["theme"] != null){
+        var shortThemeName = result["theme"];
+        chrome.storage.local.get(["customThemes"], function(result) {
+            var themeName = shortThemeName+"-customTheme";
 
-                if(board == undefined || score == undefined){
-                    board = result.tetrisGameBoard[0];
-                    score = result.tetrisGameBoard[1];
-                    newShape();
-                }
-                else if(current == undefined){
-                    newShape();
-                }
-            }
-            else{
-                init();
-            }
-            newGame();
-            document.addEventListener("keydown", restartTetris);
+            theme1 = result["customThemes"][themeName]["theme1"];
+            theme2 = result["customThemes"][themeName]["theme2"];
+            theme3 = result["customThemes"][themeName]["theme3"];
+            theme4 = result["customThemes"][themeName]["theme4"];
+            theme5 = result["customThemes"][themeName]["theme5"];
+            theme6 = result["customThemes"][themeName]["theme6"];
         });
+    }
+    chrome.storage.local.get(["tetrisGameBoard"], function(result) {
+        if(Object.keys(result).length != 0 && Object.keys(result.tetrisGameBoard).length != 0){
+            board = result.tetrisGameBoard.board;
+            score = result.tetrisGameBoard.score;
+            currentX = result.tetrisGameBoard.currentX;
+            currentY = result.tetrisGameBoard.currentY;
+            current = result.tetrisGameBoard.current;
+            heldShapeId = result.tetrisGameBoard.heldShapeId;
+            currentId = result.tetrisGameBoard.currentId;
+            canHoldShape = result.tetrisGameBoard.canHoldShape;
+
+            if(board == undefined || score == undefined){
+                board = result.tetrisGameBoard[0];
+                score = result.tetrisGameBoard[1];
+                newShape();
+            }
+            else if(current == undefined){
+                newShape();
+            }
+        }
+        else{
+            init();
+        }
+        newGame();
+        document.addEventListener("keydown", restartTetris);
     });
-}
+});
 
 // create a new 4x4 shape in global variable 'current'
 // 4x4 so as to cover the size when the shape is rotated
@@ -213,10 +219,6 @@ function init() {
 
 // keep the element moving down, creating new shapes and clearing lines
 function tick() {
-    if($('a[data-toggle="tab"].active').attr("href")!="#tetris"){
-        return
-    }
-
     if ( valid( 0, 1 ) ) {
         ++currentY;
     }
@@ -396,12 +398,6 @@ function refreshIntervals(){
 }
 
 function keydownFunction(e) {
-    if($('a[data-toggle="tab"].active').attr("href")!="#tetris"){
-        document.removeEventListener("keydown", keydownFunction);
-        document.removeEventListener("keydown", restartTetris);
-        return
-    }
-
     var keys = {
         37: 'left',
         39: 'right',
@@ -574,11 +570,6 @@ function gameEnded() {
 }
 
 function restartTetris(event){
-    if($('a[data-toggle="tab"].active').attr("href")!="#tetris"){
-        document.removeEventListener("keydown", restartTetris);
-        return
-    }
-
     if(event.keyCode==82){
         init();
         newGame();

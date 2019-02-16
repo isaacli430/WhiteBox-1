@@ -12,7 +12,7 @@
 
 (function() {              
 //var socket = io.connect('https://www.jblrd.com', {path: "/V2.0.12/whitebox-websocket/socket.io"});
-var socket = io.connect('https://www.jblrd.com', {path: "/V2/whitebox-websocket-development/socket.io"});
+window.socket = io.connect('https://www.jblrd.com', {path: "/V2/whitebox-websocket-development/socket.io"});
 
 var md = window.markdownit({linkify: true})
     .use(window.markdownitHashtag, {
@@ -743,7 +743,7 @@ $("#addFriendToGroupBtn").on("click", function() {
         var groups = result.chats[1]; // // {groupId: {name: name, viewStatus: viewStatus, lastActivity: lastActivity, members: {memberId: {username: username, status: status}}}
         var groupMembers = groups[clickedChat.id].members;
 
-        var chats = [] ;// [[id, type], ...] type: 0: friend, 1: group
+        var chats = [];// [[id, type], ...] type: 0: friend, 1: group
         for(var i = 0; i<Object.keys(friends).length; i++){
             chats.push([Object.keys(friends)[i], 0]);
         }
@@ -902,21 +902,34 @@ socket.on("changeUsernameConfirm", function(reply){
 });
 
 function goBack(){
-    stoppedTyping();
-
-    clickedChat = undefined;
-    hideEverything();
-
-    if(previousPage === "userInputElement"){
-        userInputElement.show();
+    if($("#gameArea").is(":visible")){
+        if($("#chessGameArea").is(":visible")){
+            $("#chessGameArea").hide();
+            $("#chessSelectGame").show();
+        }
+        else{
+            $("#gameArea").hide();
+            $("#backButton").hide();
+            $("#selectGame").show();
+        }
     }
     else{
-        mainTabs.show();
-        socket.emit("refreshUsers", {username: username});
-    }
+        stoppedTyping();
 
-    aboutButtonElement.show();
-    backButtonElement.hide();
+        clickedChat = undefined;
+        hideEverything();
+
+        if(previousPage === "userInputElement"){
+            userInputElement.show();
+        }
+        else{
+            mainTabs.show();
+            socket.emit("refreshUsers", {username: username});
+        }
+
+        aboutButtonElement.show();
+        backButtonElement.hide();
+    }
 }
 
 $("#messageScroll").on('scroll', function() {
@@ -1215,7 +1228,7 @@ function findLinks(text) {
 }
 
 $(document).keydown(function(e){
-    if(e.which == 27 && $("#messagePage").is(":visible")){
+    if(e.which == 27 && ($("#messagePage").is(":visible") || $("#gameArea").is(":visible"))){
         e.preventDefault();
         $(".modal").modal("hide");
         goBack();
@@ -1959,6 +1972,36 @@ socket.on("friendRequestStatus", function (status, requesteeId){
 
 socket.on("refreshFriends", function(){
     socket.emit("refreshUsers", {username: username});
+});
+
+$("#gamesTable td").on("click", function(){
+    var gameName = $(this).data("game-name");
+
+    // Load HTML
+    var txtFile = new XMLHttpRequest();
+    txtFile.open("GET", "games/"+gameName+"/main.html", true);
+    txtFile.onreadystatechange = function() {
+        if (txtFile.readyState == 4 && txtFile.status == 200) {
+            document.getElementById("gameArea").innerHTML = txtFile.responseText;
+
+            // Load script
+            var script = document.createElement("script");
+            script.src = "games/"+gameName+"/main.js";
+            document.head.appendChild(script);
+
+            // Show game
+            $("#gameArea").show();
+            $("#backButton").show();
+            $("#selectGame").hide();
+        }
+    };
+    txtFile.send(null);
+});
+
+// On games tab close
+$('#games-tab').on('hidden.bs.tab', function (e) {
+    $("#gameArea").hide();
+    $("#selectGame").show();
 });
 
 $("#snake-tab").on('show.bs.tab', function(){

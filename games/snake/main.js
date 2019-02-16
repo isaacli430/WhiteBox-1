@@ -28,67 +28,73 @@ var dy = 0;
 var gameCanvas = document.getElementById("snakeCanvas");
 var ctx = gameCanvas.getContext("2d");
 
-window.openSnakeTab = function(){
-    if(snakeInterval){
-        clearInterval(snakeInterval);
-        snakeInterval = false;
-    }
-    chrome.storage.local.get(["theme"], function(result) {
-        if(result["theme"] === "light"){
-            theme1 = "#FFFFFF";
-            theme2 = "#000000";
-            theme3 = "#495057";
-            theme4 = "#CED4DA";
-            theme5 = "#CED4DA";
-            theme6 = "#3B97E0";
-        }
-        else if(result["theme"] === "dark"){
-            theme1 = "#36393F";
-            theme2 = "#DCDDDE";
-            theme3 = "#72767E";
-            theme4 = "#303136";
-            theme5 = "#303136";
-            theme6 = "#3B97E0";
-        }
-        else if(result["theme"] != null){
-            var shortThemeName = result["theme"];
-            chrome.storage.local.get(["customThemes"], function(result) {
-                var themeName = shortThemeName+"-customTheme";
+// On games tab close
+$('#games-tab').on('hide.bs.tab', function (e) {
+    clearInterval(snakeInterval);
+    document.removeEventListener("keydown", startSnake);
+    document.removeEventListener("keydown", restartSnake);
+});
 
-                theme1 = result["customThemes"][themeName]["theme1"];
-                theme2 = result["customThemes"][themeName]["theme2"];
-                theme3 = result["customThemes"][themeName]["theme3"];
-                theme4 = result["customThemes"][themeName]["theme4"];
-                theme5 = result["customThemes"][themeName]["theme5"];
-                theme6 = result["customThemes"][themeName]["theme6"];
-
-                document.addEventListener("keydown", startSnake);
-                ctx.fillStyle = theme1;
-                ctx.strokeStyle = theme3;
-                ctx.fillRect(0, 0, gameCanvas.width, gameCanvas.height);
-                ctx.strokeRect(0, 0, gameCanvas.width, gameCanvas.height);
-                ctx.fillStyle = theme2;
-                ctx.textAlign="center"; 
-                ctx.font="20px Verdana";
-                ctx.fillText("Press Any Key To Start",175,130);
-                ctx.font="15px Verdana";
-                ctx.fillText("Use arrow keys to move around",175,190);
-            });
-        }
-
-        document.addEventListener("keydown", startSnake);
-        ctx.fillStyle = theme1;
-        ctx.strokeStyle = theme3;
-        ctx.fillRect(0, 0, gameCanvas.width, gameCanvas.height);
-        ctx.strokeRect(0, 0, gameCanvas.width, gameCanvas.height);
-        ctx.fillStyle = theme2;
-        ctx.textAlign="center"; 
-        ctx.font="20px Verdana";
-        ctx.fillText("Press Any Key To Start",175,130);
-        ctx.font="15px Verdana";
-        ctx.fillText("Use arrow keys to move around",175,190);
-    });
+// Start game
+if(snakeInterval){
+    clearInterval(snakeInterval);
+    snakeInterval = false;
 }
+chrome.storage.local.get(["theme"], function(result) {
+    if(result["theme"] === "light"){
+        theme1 = "#FFFFFF";
+        theme2 = "#000000";
+        theme3 = "#495057";
+        theme4 = "#CED4DA";
+        theme5 = "#CED4DA";
+        theme6 = "#3B97E0";
+    }
+    else if(result["theme"] === "dark"){
+        theme1 = "#36393F";
+        theme2 = "#DCDDDE";
+        theme3 = "#72767E";
+        theme4 = "#303136";
+        theme5 = "#303136";
+        theme6 = "#3B97E0";
+    }
+    else if(result["theme"] != null){
+        var shortThemeName = result["theme"];
+        chrome.storage.local.get(["customThemes"], function(result) {
+            var themeName = shortThemeName+"-customTheme";
+
+            theme1 = result["customThemes"][themeName]["theme1"];
+            theme2 = result["customThemes"][themeName]["theme2"];
+            theme3 = result["customThemes"][themeName]["theme3"];
+            theme4 = result["customThemes"][themeName]["theme4"];
+            theme5 = result["customThemes"][themeName]["theme5"];
+            theme6 = result["customThemes"][themeName]["theme6"];
+
+            document.addEventListener("keydown", startSnake);
+            ctx.fillStyle = theme1;
+            ctx.strokeStyle = theme3;
+            ctx.fillRect(0, 0, gameCanvas.width, gameCanvas.height);
+            ctx.strokeRect(0, 0, gameCanvas.width, gameCanvas.height);
+            ctx.fillStyle = theme2;
+            ctx.textAlign="center"; 
+            ctx.font="20px Verdana";
+            ctx.fillText("Press Any Key To Start",175,130);
+            ctx.font="15px Verdana";
+            ctx.fillText("Use arrow keys to move around",175,190);
+        });
+    }
+
+    document.addEventListener("keydown", startSnake);
+    ctx.fillStyle = theme1;
+    ctx.strokeStyle = theme3;
+    ctx.fillRect(0, 0, gameCanvas.width, gameCanvas.height);
+    ctx.strokeRect(0, 0, gameCanvas.width, gameCanvas.height);
+    ctx.fillStyle = theme2;
+    ctx.textAlign="center"; 
+    ctx.font="20px Verdana";
+    ctx.fillText("Press Any Key To Start",175,130);
+    ctx.font="15px Verdana";
+    ctx.fillText("Use arrow keys to move around",175,190);
+});
 
 function startSnake(){
     snake = [
@@ -114,12 +120,6 @@ function startSnake(){
 }
 
 function restartSnake(){
-    if($('a[data-toggle="tab"].active').attr("href")!="#snake"){
-        document.removeEventListener("keydown", startSnake);
-        document.removeEventListener("keydown", restartSnake);
-        return
-    }
-
     if(event.code==="ShiftRight"){
         startSnake();
     }

@@ -29,58 +29,63 @@ var gameInProgress = false;
 var moving = false;
 var creatingNewTile = false;
 
-window.open2048Tab = function(){
-	document.addEventListener("keydown", restart2048);
-	if(!gameInProgress){
-	    chrome.storage.local.get(["theme"], function(result) {
-	        if(result["theme"] === "light"){
-	            theme1 = "#FFFFFF";
-	            theme2 = "#000000";
-	            theme3 = "#495057";
-	            theme4 = "#CED4DA";
-	            theme5 = "#CED4DA";
-	            theme6 = "#3B97E0";
+// On games tab close
+$('#games-tab').on('hide.bs.tab', function (e) {
+	document.removeEventListener("keydown", keyPress);
+    document.removeEventListener("keydown", restart2048);
+});
 
-		        ctx.fillStyle = theme1;
-		        ctx.fillRect(0, 0, gameCanvas.width, gameCanvas.height);
-		        start2048();
-	        }
-	        else if(result["theme"] === "dark"){
-	            theme1 = "#36393F";
-	            theme2 = "#DCDDDE";
-	            theme3 = "#72767E";
-	            theme4 = "#303136";
-	            theme5 = "#303136";
-	            theme6 = "#3B97E0";
+// On game start
+document.addEventListener("keydown", restart2048);
+if(!gameInProgress){
+    chrome.storage.local.get(["theme"], function(result) {
+        if(result["theme"] === "light"){
+            theme1 = "#FFFFFF";
+            theme2 = "#000000";
+            theme3 = "#495057";
+            theme4 = "#CED4DA";
+            theme5 = "#CED4DA";
+            theme6 = "#3B97E0";
 
-		        ctx.fillStyle = theme1;
-		        ctx.fillRect(0, 0, gameCanvas.width, gameCanvas.height);
-		        start2048();
-	        }
-	        else if(result["theme"] != null){
-	            var shortThemeName = result["theme"];
-	            chrome.storage.local.get(["customThemes"], function(result) {
-	                var themeName = shortThemeName+"-customTheme";
+	        ctx.fillStyle = theme1;
+	        ctx.fillRect(0, 0, gameCanvas.width, gameCanvas.height);
+	        start2048();
+        }
+        else if(result["theme"] === "dark"){
+            theme1 = "#36393F";
+            theme2 = "#DCDDDE";
+            theme3 = "#72767E";
+            theme4 = "#303136";
+            theme5 = "#303136";
+            theme6 = "#3B97E0";
 
-	                theme1 = result["customThemes"][themeName]["theme1"];
-	                theme2 = result["customThemes"][themeName]["theme2"];
-	                theme3 = result["customThemes"][themeName]["theme3"];
-	                theme4 = result["customThemes"][themeName]["theme4"];
-	                theme5 = result["customThemes"][themeName]["theme5"];
-	                theme6 = result["customThemes"][themeName]["theme6"];
+	        ctx.fillStyle = theme1;
+	        ctx.fillRect(0, 0, gameCanvas.width, gameCanvas.height);
+	        start2048();
+        }
+        else if(result["theme"] != null){
+            var shortThemeName = result["theme"];
+            chrome.storage.local.get(["customThemes"], function(result) {
+                var themeName = shortThemeName+"-customTheme";
 
-	                ctx.fillStyle = theme1;
-	                ctx.fillRect(0, 0, gameCanvas.width, gameCanvas.height);
-		        	start2048();
-	            });
-	        }
-	        else{
-		        ctx.fillStyle = theme1;
-		        ctx.fillRect(0, 0, gameCanvas.width, gameCanvas.height);
-		        start2048();
-		    }
-	    });
-	}
+                theme1 = result["customThemes"][themeName]["theme1"];
+                theme2 = result["customThemes"][themeName]["theme2"];
+                theme3 = result["customThemes"][themeName]["theme3"];
+                theme4 = result["customThemes"][themeName]["theme4"];
+                theme5 = result["customThemes"][themeName]["theme5"];
+                theme6 = result["customThemes"][themeName]["theme6"];
+
+                ctx.fillStyle = theme1;
+                ctx.fillRect(0, 0, gameCanvas.width, gameCanvas.height);
+	        	start2048();
+            });
+        }
+        else{
+	        ctx.fillStyle = theme1;
+	        ctx.fillRect(0, 0, gameCanvas.width, gameCanvas.height);
+	        start2048();
+	    }
+    });
 }
 
 function start2048(){
@@ -108,12 +113,6 @@ function start2048(){
 }
 
 function restart2048(event){
-    if($('a[data-toggle="tab"].active').attr("href")!="#2048-game"){
-    	document.removeEventListener("keydown", keyPress);
-        document.removeEventListener("keydown", restart2048);
-        return
-    }
-
     if(event.keyCode==82){
     	chrome.storage.local.set({'2048GameNumbers': null}, function() {
         	start2048();
