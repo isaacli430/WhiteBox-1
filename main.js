@@ -83,6 +83,11 @@ $("#lightThemeBtn").on("click", setLightTheme);
 $("#darkThemeBtn").on("click", setDarkTheme);
 $("#testThemeUpdateBtn").on("click", updateTestTheme);
 
+// Hide notifications
+$("#notificationDiv").hide();
+// Notification Timeout
+var notificationTimeout;
+
 var userInputElement = $("#userInput");
 var usersElement = $("#users");
 var aboutButtonElement = $("#aboutButton");
@@ -1012,7 +1017,7 @@ socket.on("isTyping", function(reply){
     var isOnline = reply.isOnline;
     var fadeTime = 200;
 
-    if(clickedChat != null && clickedChat.id == chatId && clickedChat.type == chatType){ // If still in the right chat
+    if(clickedChat != null && clickedChat.id == chatId && clickedChat.type == chatType){ // If in the chat of the person typing
         if(chatType == 0){ // If friend
             if(isTyping){
                 $("#messagePageLastOnline").fadeOut(fadeTime, function() {
@@ -1050,6 +1055,15 @@ socket.on("isTyping", function(reply){
                 $("#messagePageLastOnline").text(peopleTyping);
             }).fadeIn(fadeTime);
         }
+    }
+    else{ // If they are not in the chat that the person is typing into
+        if(chatType == 0){ // Only show is typing for 1 to 1 chats, not grops
+            if(isTyping){
+                var personTypingName = friends[chatId].name;
+                showNotification(personTypingName+" is typing...");
+            }
+        }
+        
     }
 });
 
@@ -1287,7 +1301,41 @@ socket.on("newMessage", function(incomingMessage) {
         var chatType = clickedChat.type;
         socket.emit("receivedMessage", {receiverName: username, senderId: senderId, chatType: chatType});
     }
-});
+    else{ // If chat is not open
+        var senderName = friends[senderId].name;
+        if(type == 0){
+            showNotification(senderName+" sent a message");
+        }
+        else if(type == 1){
+            var groupName = groups[chatId].name;
+            showNotification(senderName+" sent a message to "+groupName);
+        }
+    }
+}); 
+
+function showNotification(notificationMessage) {
+    $("#notificationDiv > h6").text(notificationMessage);
+    var animationSpeed = 200;
+
+    // Clears timeout so that if a notification is already showing the new one wont dissappear prematurely
+    clearTimeout(notificationTimeout);  
+
+    $("#notificationDiv").css('opacity', 0.9)
+                         .slideDown(animationSpeed)
+                         .animate(
+                             {opacity: 1},
+                             {queue: false, duration: animationSpeed}
+                         );
+
+    notificationTimeout = setTimeout(function(){
+        $("#notificationDiv").css('opacity', 1)
+                             .slideUp(animationSpeed)
+                             .animate(
+                                 {opacity: 0.9},
+                                 {queue: false, duration: animationSpeed}
+                             );
+    }, 5000);
+}
 
 socket.on("updatedViewStatus", function(reply) {
     var friendId = reply[0];
@@ -1995,6 +2043,8 @@ $("#make-group-tab").on('show.bs.tab', function(){
     chrome.storage.local.get(["chats"], function(result) {
         var friends = result.chats[0]; // {userId: {name: name, viewStatus: viewStatus, lastActivity: lastActivity, lastOnline: lastOnline, messages: {}, ...}
         var groups = result.chats[1]; // {groupId: {name: name, viewStatus: viewStatus, lastActivity: lastActivity, members: {memberId: {username: username, status: status}}}
+
+        var chats = [] ;// [[id, type], ...] type: 0: friend, 1: group
         for(var i = 0; i<Object.keys(friends).length; i++){
             chats.push([Object.keys(friends)[i], 0]);
         }
