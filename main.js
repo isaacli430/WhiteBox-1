@@ -1577,39 +1577,6 @@ function refreshChats(reply){
             var buttonTd = document.createElement("td");
             buttonTd.appendChild(button);
 
-            // Dropdown
-            var dropdownBtn = document.createElement("button");
-            dropdownBtn.classList.add("textLink");
-            dropdownBtn.setAttribute("data-toggle", "dropdown");
-            dropdownBtn.innerHTML = "...";
-
-            var dropdownDeleteMsgBtn = document.createElement("button");
-            dropdownDeleteMsgBtn.classList.add("dropdown-item");
-            dropdownDeleteMsgBtn.classList.add("dropdown-text");
-            dropdownDeleteMsgBtn.setAttribute("data-friendId", friendsId);
-            dropdownDeleteMsgBtn.onclick = function() {deleteMsgAfterModal(this.getAttribute("data-friendId"));};
-            dropdownDeleteMsgBtn.innerHTML = "Delete Msg After:";
-
-            var dropdownSeeFriendsBtn = document.createElement("button");
-            dropdownSeeFriendsBtn.classList.add("dropdown-item");
-            dropdownSeeFriendsBtn.classList.add("dropdown-text");
-            dropdownSeeFriendsBtn.setAttribute("data-friendId", friendsId);
-            dropdownSeeFriendsBtn.onclick = function() {seeFriendsModal(this.getAttribute("data-friendId"));};
-            dropdownSeeFriendsBtn.innerHTML = "See Friends";
-
-            var dropdownMenu = document.createElement("div");
-            dropdownMenu.classList.add("dropdown-menu");
-            dropdownMenu.append(dropdownDeleteMsgBtn);
-            dropdownMenu.append(dropdownSeeFriendsBtn);
-             
-            var dropdownDiv = document.createElement("div");
-            dropdownDiv.classList.add("dropdown");
-            dropdownDiv.append(dropdownBtn);
-            dropdownDiv.append(dropdownMenu);
-
-            var dropdownTd = document.createElement("td");
-            dropdownTd.append(dropdownDiv);
-
             var lastActivityTd = document.createElement("td");
             lastActivityTd.align = "right";
             lastActivityTd.appendChild(lastActivityA);
