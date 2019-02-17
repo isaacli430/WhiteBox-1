@@ -903,15 +903,9 @@ socket.on("changeUsernameConfirm", function(reply){
 
 function goBack(){
     if($("#gameArea").is(":visible")){
-        if($("#chessGameArea").is(":visible")){
-            $("#chessGameArea").hide();
-            $("#chessSelectGame").show();
-        }
-        else{
-            $("#gameArea").hide();
-            $("#backButton").hide();
-            $("#selectGame").show();
-        }
+        $("#gameArea").hide();
+        $("#backButton").hide();
+        $("#selectGame").show();
     }
     else{
         stoppedTyping();
@@ -2019,12 +2013,20 @@ $("#tetris-tab").on('show.bs.tab', function(){
 socket.on("gameHighscores", function(reply) {
     var gameName = reply[0];
     var friendScores = reply[1];
+    var cfg = reply[2] || {};
+
+    var reverse = cfg.reverse;
+    var formatter = window[cfg.formatter];
 
     $("#gameHighscoresTable").empty();
 
     var sortedFriendIds = Object.keys(friendScores).sort(function(a,b){
         return friendScores[a]-friendScores[b];
-    }).reverse();
+    });
+    console.log(reverse)
+    if(!reverse){
+        sortedFriendIds.reverse();
+    }
 
     for(var i=0; i<sortedFriendIds.length; i++){
         var friendId = sortedFriendIds[i];
@@ -2034,10 +2036,16 @@ socket.on("gameHighscores", function(reply) {
             friendName = username;
         }
         else{
-            friendName = friends[friendId].name;
+            friendName = escapeHtml(friends[friendId].name);
         }
 
-        var friendScore = friendScores[friendId];
+        var friendScore
+        if(typeof formatter === 'function'){
+            friendScore = formatter(friendScores[friendId]);
+        }
+        else{
+            friendScore = friendScores[friendId];
+        }
 
         var nameTd = document.createElement("td");
         nameTd.innerHTML = friendName;
@@ -2205,8 +2213,8 @@ function escapeHtml(unsafe) {
         .replace(/'/g, "&#039;");
 }
 
-window.getGameHighScores = function(game) {
-    socket.emit("getGameHighScores", {username: username, gameName: game}); 
+window.getGameHighScores = function(game, cfg) {
+    socket.emit("getGameHighScores", {username: username, gameName: game, cfg: cfg}); 
 };
 
 window.gameHighScore = function(game, score) {
