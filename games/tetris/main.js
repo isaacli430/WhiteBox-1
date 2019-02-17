@@ -98,11 +98,16 @@ var renderInterval = 30
 var tickInterval = 1000;
 
 // On games tab close
-$('#games-tab').on('hide.bs.tab', function (e) {
+$('#games-tab').on('hide.bs.tab', goBack);
+
+// On leaving game
+$("#backButton").on("click", goBack);
+
+function goBack() {
     clearAllIntervals();
     document.removeEventListener("keydown", keydownFunction);
     document.removeEventListener("keydown", restartTetris);
-});
+}
 
 // On game start
 chrome.storage.local.get(["theme"], function(result) {
@@ -219,6 +224,10 @@ function init() {
 
 // keep the element moving down, creating new shapes and clearing lines
 function tick() {
+    if(!$("#tetrisCanvas").is(":visible")){
+        goBack();
+    }
+
     if ( valid( 0, 1 ) ) {
         ++currentY;
     }

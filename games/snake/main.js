@@ -29,11 +29,16 @@ var gameCanvas = document.getElementById("snakeCanvas");
 var ctx = gameCanvas.getContext("2d");
 
 // On games tab close
-$('#games-tab').on('hide.bs.tab', function (e) {
+$('#games-tab').on('hide.bs.tab', goBack);
+
+// On leaving game
+$("#backButton").on("click", goBack);
+
+function goBack() {
     clearInterval(snakeInterval);
     document.removeEventListener("keydown", startSnake);
     document.removeEventListener("keydown", restartSnake);
-});
+}
 
 // Start game
 if(snakeInterval){
@@ -134,6 +139,10 @@ function restartSnake(){
  * called repeatedly to advance the game
  */
 function runSnake() {
+    if(!$("#snakeCanvas").is(":visible")){
+        goBack();
+    }
+
     // If the game ended return early to stop game
     if (didGameEnd()){
         ctx.globalAlpha = 0.75;
