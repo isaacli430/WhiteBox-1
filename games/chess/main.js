@@ -5,6 +5,25 @@ var game;
 
 $("#chessGameArea").hide();
 
+// Settings button press
+$("#chessGameSettings").on("click", function() {
+    $("#chessGameSettingsModal").modal("show");
+
+    $("#chessRestartGame").on("click", function() {
+        socket.emit("chessGame", {request: "updateBoard", data: {pgn: "", opponentId: clickedGame.opponentId}});
+        $("#chessGameSettingsModal").modal("hide");
+        getGameData(clickedGame.opponentId, clickedGame.opponentName);
+    });
+
+    $("#chessDeleteGame").on("click", function() {
+        socket.emit("chessGame", {request: "deleteGame", data: {opponentId: clickedGame.opponentId}});
+        socket.emit("chessGame", {request: "getGames"});
+        $("#chessGameSettingsModal").modal("hide");
+        $("#chessGameArea").hide();
+        $("#chessSelectGame").show();
+    });
+});
+
 // Get games
 socket.emit("chessGame", {request: "getGames"});
 
@@ -54,7 +73,7 @@ $("#chessNewGameBtn").on("click", function() {
 
                 var button = document.createElement("button");
                 button.classList.add("textLink");
-                button.classList.add("addFriendToGroupBtn");
+                button.classList.add("chessNewGameWithFriendBtn");
                 button.setAttribute("data-friendId", friendsId);
                 button.appendChild(chatIcon);
                 button.innerHTML += " "+friendsName;
@@ -70,15 +89,86 @@ $("#chessNewGameBtn").on("click", function() {
             }
         }
 
-        $(".addFriendToGroupBtn").on("click", function() {
+        $(".chessNewGameWithFriendBtn").on("click", function() {
             var friendId = $(this).attr("data-friendId");
 
             socket.emit("chessGame", {request: "newGame", data: {opponentId: friendId}});
+            clickedGame = {opponentId: friendId, opponentName: friends[friendId].name, pgn: "", stepPosition: 0};
             $("#groupNewGameModal").modal("hide");
         });
     });
 
     $("#groupNewGameModal").modal("show");
+});
+
+function goBack() {
+    clickedGame = {};
+    board = undefined;
+    game = undefined;
+    socket.emit("chessGame", {request: "getGames"});
+}
+
+$("#backButton").on("click", function() {
+    goBack();
+});
+
+$("#chessStepForwardBtn").on("click", function() {
+    // Step position is how far back from beginning of game. 
+    // eg. 0 is most recient and 1 is one step back
+
+    // Subtract one to step position
+    if(clickedGame.stepPosition > 0){
+        clickedGame.stepPosition = clickedGame.stepPosition - 1;
+    }
+
+    var stepPosition = clickedGame.stepPosition;
+    var pgn = clickedGame.pgn;
+
+    // Load pgn
+    var tempChess = new Chess();
+    tempChess.load_pgn(pgn);
+    var history = tempChess.history();
+
+    // Undo the required number of times
+    for (var i = 0; i < stepPosition; i++) {
+        tempChess.undo();
+    }
+
+    // Render board at this new position
+    board.position(tempChess.fen());
+});
+
+$("#chessStepBackwardBtn").on("click", function() {
+    // Step position is how far back from beginning of game. 
+    // eg. 0 is most recient and 1 is one step back
+
+    // Add one to step position
+    clickedGame.stepPosition = clickedGame.stepPosition + 1;
+
+    var stepPosition = clickedGame.stepPosition;
+    var pgn = clickedGame.pgn;
+
+    // Load pgn
+    var tempChess = new Chess();
+    tempChess.load_pgn(pgn);
+    var history = tempChess.history();
+
+    // Undo the required number of times
+    for (var i = 0; i < stepPosition; i++) {
+        // If move is unsuccessful step forwards one, else just go back
+        if(!tempChess.undo()){ 
+            clickedGame.stepPosition = clickedGame.stepPosition - 1;
+        }
+    }
+
+    // Render board at this new position
+    board.position(tempChess.fen());
+});
+
+$(document).keydown(function(e){
+    if(e.which == 27){
+        goBack();
+    }
 });
 
 function refreshGames(data){
@@ -125,7 +215,7 @@ function refreshGames(data){
 
 function getGameData(opponentId, opponentName){
     socket.emit("chessGame", {request: "getGameData", data: {opponentId: opponentId}});
-    clickedGame = {opponentId: opponentId, opponentName: opponentName};
+    clickedGame = {opponentId: opponentId, opponentName: opponentName, stepPosition: 0};
 }
 
 socket.on("chessGame", function(reply) {
@@ -138,6 +228,7 @@ socket.on("chessGame", function(reply) {
         var blackId = data.blackId;
         var pgn = data.pgn;
 
+        clickedGame.pgn = pgn;
         startGame(playerColor, whiteId, blackId, pgn);
     }
     else if(response === "games"){
@@ -146,6 +237,9 @@ socket.on("chessGame", function(reply) {
     else if(response === "newMove"){
         if(data.opponentId = clickedGame.opponentId){
             updateBoard(data);
+        }
+        else{
+            socket.emit("chessGame", {request: "getGames"});
         }
     }
 });
@@ -182,7 +276,6 @@ function startGame(playerColor, whiteId, blackId, pgn){
     // only pick up pieces for the side to move
     var onDragStart = function(source, piece, position, orientation) {
         if(playerColor === "w"){
-            console.log(piece.search(/^w/) !== -1)
             if (game.game_over() === true  || game.turn() === 'b' || piece.search(/^b/) !== -1) {
                 return false;
             }
@@ -214,6 +307,11 @@ function startGame(playerColor, whiteId, blackId, pgn){
     };
 
     var onMouseoverSquare = function(square, piece) {
+        // If the user is not at the most receint position
+        if(clickedGame.stepPosition != 0){
+            return;
+        }
+
         if(game.game_over() === true  || game.turn() != playerColor){
             return;
         }
@@ -260,6 +358,7 @@ function startGame(playerColor, whiteId, blackId, pgn){
         onMouseoverSquare: onMouseoverSquare,
         onSnapEnd: onSnapEnd,
         pieceTheme: "vendors/chessboardjs-0.3.0/chesspieces/wikipedia/{piece}.png",
+        moveSpeed: 150,
     };
     if(playerColor === "b"){
         cfg.orientation = "black";
@@ -270,7 +369,6 @@ function startGame(playerColor, whiteId, blackId, pgn){
 }
 
 function updateBoard(data){
-    console.log(board)
     game.load_pgn(data.pgn);
     board.position(game.fen(), true);
     updateStatus();
@@ -314,7 +412,6 @@ function calcLastOnline(lastOnline) {
         return "&infin;";
     }
 }
-
 
 function updateStatus() {
     var statusEl = $('#chessStatus');
