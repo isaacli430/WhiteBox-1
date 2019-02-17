@@ -112,6 +112,30 @@ $("#backButton").on("click", function() {
     goBack();
 });
 
+$("#chessStepFastForwardBtn").on("click", function() {
+    // Step position is how far back from beginning of game. 
+    // eg. 0 is most recient and 1 is one step back
+
+    // Subtract one to step position
+    clickedGame.stepPosition = 0;
+
+    var stepPosition = clickedGame.stepPosition;
+    var pgn = clickedGame.pgn;
+
+    // Load pgn
+    var tempChess = new Chess();
+    tempChess.load_pgn(pgn);
+    var history = tempChess.history();
+
+    // Undo the required number of times
+    for (var i = 0; i < stepPosition; i++) {
+        tempChess.undo();
+    }
+
+    // Render board at this new position
+    board.position(tempChess.fen());
+});
+
 $("#chessStepForwardBtn").on("click", function() {
     // Step position is how far back from beginning of game. 
     // eg. 0 is most recient and 1 is one step back
@@ -285,6 +309,12 @@ function startGame(playerColor, whiteId, blackId, pgn){
                 return false;
             }
         }
+
+        // If the user is not at the most receint position
+        if(clickedGame.stepPosition != 0){
+            $("#chessStepFastForwardBtn").fadeOut(500).fadeIn(500).fadeOut(500).fadeIn(500);
+            return false;
+        }
     };
 
     var onDrop = function(source, target) {
@@ -371,6 +401,7 @@ function startGame(playerColor, whiteId, blackId, pgn){
 function updateBoard(data){
     game.load_pgn(data.pgn);
     board.position(game.fen(), true);
+    clickedGame.pgn = data.pgn;
     updateStatus();
 }
 
