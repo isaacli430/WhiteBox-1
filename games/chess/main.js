@@ -4,6 +4,7 @@ var board;
 var game;
 
 $("#chessGameArea").hide();
+$("#chessRestartGame2").hide();
 
 // Settings button press
 $("#chessGameSettings").on("click", function() {
@@ -22,6 +23,13 @@ $("#chessGameSettings").on("click", function() {
         $("#chessGameArea").hide();
         $("#chessSelectGame").show();
     });
+});
+
+$("#chessRestartGame2").on("click", function() {
+    socket.emit("chessGame", {request: "updateBoard", data: {pgn: "", opponentId: clickedGame.opponentId}});
+    $("#chessGameSettingsModal").modal("hide");
+    getGameData(clickedGame.opponentId, clickedGame.opponentName);
+    $("#chessRestartGame2").hide();
 });
 
 // Get games
@@ -114,6 +122,7 @@ window.gameGoBack = function() {
         $("#gameArea").hide();
         $("#backButton").hide();
         $("#selectGame").show();
+        $("#chessRestartGame2").hide();
     }
 };
 
@@ -204,14 +213,26 @@ function refreshGames(data){
             var opponentId = data[i].opponentId;
             var lastPlayer = data[i].lastPlayer;
             var lastActivity = data[i].lastActivity;
+            var isSeen = data[i].isSeen;
             var opponentName = friends[opponentId].name;
+
+            var iconHtml;
+            if(lastPlayer == opponentId){
+                iconHtml = '<i class="fas fa-exclamation fa-fw"></i>';
+            }
+            else if(lastPlayer != opponentId && !isSeen) {
+                iconHtml = '<i class="fas fa-arrow-alt-circle-right fa-fw"></i>';
+            }
+            else if(lastPlayer != opponentId && isSeen) {
+                iconHtml = '<i class="far fa-arrow-alt-circle-right fa-fw"></i>';
+            }
 
             var button = document.createElement("button");
             button.classList.add("textLink");
             button.classList.add("addFriendToGroupBtn");
             button.setAttribute("data-userId", opponentId);
             button.setAttribute("data-name", opponentName);
-            button.innerHTML += " "+opponentName;
+            button.innerHTML += iconHtml+" "+opponentName;
             button.onclick = function() {getGameData(this.getAttribute("data-userId"), this.getAttribute("data-name"))};
 
             var buttonTd = document.createElement("td");
@@ -252,6 +273,7 @@ socket.on("chessGame", function(reply) {
         var pgn = data.pgn;
 
         clickedGame.pgn = pgn;
+        clickedGame.playerColor = playerColor;
         startGame(playerColor, whiteId, blackId, pgn);
     }
     else if(response === "games"){
@@ -336,6 +358,7 @@ function startGame(playerColor, whiteId, blackId, pgn){
 
         updateStatus();
         socket.emit("chessGame", {request: "updateBoard", data: {pgn: game.pgn(), opponentId: opponentId}});
+        clickedGame.pgn = game.pgn();
     };
 
     var onMouseoverSquare = function(square, piece) {
@@ -458,7 +481,13 @@ function updateStatus() {
 
     // checkmate?
     if (game.in_checkmate() === true) {
-        status = 'Game over, ' + moveColor + ' is in checkmate.';
+        if(clickedGame.playerColor === game.turn()){
+            status = 'Game over, you are in checkmate.';
+            $("#chessRestartGame2").show();
+        }
+        else{
+            status = 'You Win! Waiting for opponent to restart...';
+        }
     }
 
     // draw?
