@@ -1319,6 +1319,9 @@ socket.on("newMessage", function(incomingMessage) {
 }); 
 
 function showNotification(notificationMessage) {
+    if (notificationMessage.length > 35) {
+        notificationMessage = notificationMessage.substring(0, 32) + "..."
+    }
     $("#notificationDiv > h6").text(notificationMessage);
     var animationSpeed = 200;
 
