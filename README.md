@@ -5,7 +5,7 @@ When game is clicked, the text inside main.html is loaded into the gameArea, and
 rules:  *all of this will probably change as this is a bad way to handle things*
 1. All element ID's must begin with the game name (eg. *snake*Canvas)
 2. All global functions must begin with the game name (eg. *snake*Formatter)
-3. All game code should be surrounded by "(function() {" and "})();" to make all the code local
+3. All game code should be surrounded by ```(function() {``` and ```})();``` to make all the code local
 
 File format is as follows:
 ```
