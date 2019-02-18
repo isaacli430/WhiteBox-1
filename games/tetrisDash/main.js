@@ -364,7 +364,6 @@
          [1,0],
          [0,0]]
     ];
-    var score = 0;
     var shapeBag = [];
     var heldShapeId;
     var currentId;
@@ -1009,7 +1008,7 @@
             if(Object.keys(result).length === 0){
                 chrome.storage.local.set({gameHighScore: {"tetrisDash": score}});
                 ctx.font="20px Verdana";
-                ctx.fillText("Score: "+score,175,130);
+                ctx.fillText("Score: "+tetrisDashFormatTime(timeInt),175,130);
                 gameHighScore(game, score);
             }
             else if(!result["gameHighScore"].hasOwnProperty(game) && !failed){
