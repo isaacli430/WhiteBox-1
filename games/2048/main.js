@@ -29,11 +29,13 @@ var gameInProgress = false;
 var moving = false;
 var creatingNewTile = false;
 
-// On games tab close
-$('#games-tab').on('hide.bs.tab', function (e) {
+window.gameGoBack = function() {
 	document.removeEventListener("keydown", keyPress);
     document.removeEventListener("keydown", restart2048);
-});
+    $("#gameArea").hide();
+    $("#backButton").hide();
+    $("#selectGame").show();
+};
 
 // On game start
 document.addEventListener("keydown", restart2048);

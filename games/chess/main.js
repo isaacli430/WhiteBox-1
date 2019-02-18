@@ -101,16 +101,21 @@ $("#chessNewGameBtn").on("click", function() {
     $("#groupNewGameModal").modal("show");
 });
 
-function goBack() {
-    clickedGame = {};
-    board = undefined;
-    game = undefined;
-    socket.emit("chessGame", {request: "getGames"});
-}
-
-$("#backButton").on("click", function() {
-    goBack();
-});
+window.gameGoBack = function() {
+    if($("#chessGameArea").is(":visible")){
+        clickedGame = {};
+        board = undefined;
+        game = undefined;
+        socket.emit("chessGame", {request: "getGames"});
+        $("#chessGameArea").hide();
+        $("#chessSelectGame").show();
+    }
+    else if($("#chessSelectGame").is(":visible")){
+        $("#gameArea").hide();
+        $("#backButton").hide();
+        $("#selectGame").show();
+    }
+};
 
 $("#chessStepFastForwardBtn").on("click", function() {
     // Step position is how far back from beginning of game. 
@@ -189,12 +194,6 @@ $("#chessStepBackwardBtn").on("click", function() {
     board.position(tempChess.fen());
 });
 
-$(document).keydown(function(e){
-    if(e.which == 27){
-        goBack();
-    }
-});
-
 function refreshGames(data){
     chrome.storage.local.get(["chats"], function(result) {
         $("#chessGamesTable tr").not(':first').remove();
@@ -265,6 +264,9 @@ socket.on("chessGame", function(reply) {
         else{
             socket.emit("chessGame", {request: "getGames"});
         }
+    }
+    else if(response === "updateGames"){
+        socket.emit("chessGame", {request: "getGames"});
     }
 });
 

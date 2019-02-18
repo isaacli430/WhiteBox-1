@@ -902,10 +902,8 @@ socket.on("changeUsernameConfirm", function(reply){
 });
 
 function goBack(){
-    if($("#gameArea").is(":visible")){
-        $("#gameArea").hide();
-        $("#backButton").hide();
-        $("#selectGame").show();
+    if($("#gameArea").is(":visible") && typeof gameGoBack === "function"){
+        gameGoBack();
     }
     else{
         stoppedTyping();
@@ -1992,24 +1990,6 @@ $("#gamesTable td").on("click", function(){
     txtFile.send(null);
 });
 
-// On games tab close
-$('#games-tab').on('hidden.bs.tab', function (e) {
-    $("#gameArea").hide();
-    $("#selectGame").show();
-});
-
-$("#snake-tab").on('show.bs.tab', function(){
-    openSnakeTab();
-});
-
-$("#2048-game-tab").on('show.bs.tab', function(){
-    open2048Tab();
-});
-
-$("#tetris-tab").on('show.bs.tab', function(){
-    openTetrisTab();
-});
-
 socket.on("gameHighscores", function(reply) {
     var gameName = reply[0];
     var friendScores = reply[1];
@@ -2023,7 +2003,6 @@ socket.on("gameHighscores", function(reply) {
     var sortedFriendIds = Object.keys(friendScores).sort(function(a,b){
         return friendScores[a]-friendScores[b];
     });
-    console.log(reverse)
     if(!reverse){
         sortedFriendIds.reverse();
     }

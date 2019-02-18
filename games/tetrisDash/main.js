@@ -379,17 +379,14 @@ var tickInterval = 500;
 var canvas = document.getElementById("tetrisDashCanvas");
 var ctx = canvas.getContext('2d');
 
-// On games tab close
-$('#games-tab').on('hide.bs.tab', goBack);
-
-// On leaving game
-$("#backButton").on("click", goBack);
-
-function goBack() {
+window.gameGoBack = function() {
     clearAllIntervals();
     document.removeEventListener("keydown", keydownFunction);
     document.removeEventListener("keydown", restartTetris);
-}
+    $("#gameArea").hide();
+    $("#backButton").hide();
+    $("#selectGame").show();
+};
 
 var Stopwatch = function(changeVar, options) {
     var offset,
@@ -574,10 +571,6 @@ function init() {
 
 // keep the element moving down, creating new shapes and clearing lines
 function tick(key) {
-    if(!$("#tetrisDashCanvas").is(":visible")){
-        goBack();
-    }
-
     if ( valid( 0, 1 ) ) {
         ++currentY;
     }
